@@ -61,12 +61,12 @@
       <div class="status"><span class="pulse"></span><span id="lastUpdate">Ubicación actualizada ahora</span></div>
       <div class="driver">
         <div class="avatar">MR</div>
-        <div><strong>Martín Rodríguez</strong><span>Conductor verificado</span></div>
-        <div class="car"><strong>AB 123 CD</strong><span>Chevrolet Onix</span></div>
+        <div><strong id="driverName">Martín Rodríguez</strong><span>Conductor verificado</span></div>
+        <div class="car"><strong id="plate">AB 123 CD</strong><span id="vehicle">Chevrolet Onix</span></div>
       </div>
       <div class="route">
         <div class="stop"><small>Origen</small><strong>Alsina 65, Bahía Blanca</strong></div>
-        <div class="stop"><small>Destino</small><strong>Av. Alem 1253, Bahía Blanca</strong></div>
+        <div class="stop"><small>Destino</small><strong id="destination">Av. Alem 1253, Bahía Blanca</strong></div>
       </div>
       <div class="eta"><span>Llegada estimada</span><strong id="eta">6 min</strong></div>
       <button class="button" id="recenter" type="button">Centrar el auto en el mapa</button>
@@ -92,7 +92,31 @@
     const icon = L.divIcon({ className:'', html:'<div class="vehicle-pin"><span>🚗</span></div>', iconSize:[42,42], iconAnchor:[21,38] });
     const vehicle = L.marker(route[1], { icon }).addTo(map).bindTooltip('Tu auto', { direction:'top', offset:[0,-31] }).openTooltip();
     let index = 1;
+    const trackingToken = new URLSearchParams(location.search).get('token');
+    const trackingApi = 'https://livre-cloud-production.up.railway.app/elevenlabs/tracking/';
+    async function refreshLiveTrip() {
+      if (!trackingToken) return;
+      try {
+        const response = await fetch(trackingApi + encodeURIComponent(trackingToken), { cache: 'no-store' });
+        if (!response.ok) return;
+        const trip = await response.json();
+        if (trip.driver) document.getElementById('driverName').textContent = trip.driver;
+        if (trip.plate) document.getElementById('plate').textContent = trip.plate;
+        if (trip.vehicle) document.getElementById('vehicle').textContent = trip.vehicle;
+        if (trip.destination) document.getElementById('destination').textContent = trip.destination;
+        if (trip.location && Number.isFinite(trip.location.lat) && Number.isFinite(trip.location.lng)) {
+          vehicle.setLatLng([trip.location.lat, trip.location.lng]);
+          map.setView([trip.location.lat, trip.location.lng]);
+          document.getElementById('lastUpdate').textContent = 'Ubicación actualizada ahora';
+          document.getElementById('coordinates').textContent = 'GPS del vehículo · ahora';
+        }
+      } catch (error) {
+        console.warn('No se pudo consultar el seguimiento', error);
+      }
+    }
     document.getElementById('recenter').addEventListener('click', () => map.setView(vehicle.getLatLng(), 16, { animate:true }));
+    refreshLiveTrip();
+    setInterval(refreshLiveTrip, 10000);
     setInterval(() => {
       index = (index + 1) % route.length;
       vehicle.setLatLng(route[index]);
