@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#111827" />
+  <meta name="theme-color" content="#E8003D" />
   <title>Livre · Seguimiento del viaje</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root { --ink:#172033; --muted:#697386; --line:#e7eaf0; --brand:#ec5b37; --brand-dark:#d94725; --soft:#fff4ef; --green:#14946b; }
+    :root { --ink:#111; --muted:#555; --line:#e0e0e0; --brand:#E8003D; --brand-dark:#B50030; --soft:#fff0f4; --green:#16845f; }
     * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:#f7f8fa; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin:0; color:var(--ink); background:#f5f5f5; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     .shell { min-height:100vh; display:grid; grid-template-columns:minmax(320px, 390px) 1fr; }
     .panel { z-index:2; background:#fff; border-right:1px solid var(--line); padding:30px 28px 24px; display:flex; flex-direction:column; gap:24px; box-shadow:8px 0 30px rgba(23,32,51,.04); }
     .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; letter-spacing:-.04em; }
-    .brand-mark { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:var(--brand); color:#fff; font-weight:900; }
+    .brand img { width:38px; height:32px; object-fit:contain; object-position:left center; }
     .eyebrow { margin:0 0 7px; color:var(--green); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     h1 { margin:0; font-size:29px; line-height:1.1; letter-spacing:-.055em; }
     .intro { color:var(--muted); line-height:1.5; margin:10px 0 0; font-size:14px; }
@@ -36,8 +36,13 @@
     .eta { display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-radius:15px; background:var(--soft); }
     .eta span { color:#93513f; font-size:12px; font-weight:700; }
     .eta strong { color:var(--brand-dark); font-size:20px; }
-    .button { width:100%; border:0; border-radius:12px; padding:14px 16px; background:var(--ink); color:#fff; font:inherit; font-weight:750; cursor:pointer; transition:transform .15s, background .15s; }
-    .button:hover { background:#26324a; transform:translateY(-1px); }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .button { width:100%; border:0; border-radius:999px; padding:13px 12px; background:var(--brand); color:#fff; font:inherit; font-size:13px; font-weight:750; cursor:pointer; transition:transform .15s, background .15s; }
+    .button:hover { background:var(--brand-dark); transform:translateY(-1px); }
+    .button.secondary { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .button.secondary:hover { background:#f7f7f7; }
+    .notice { display:none; padding:11px 13px; border-radius:12px; background:#fff4db; color:#775300; font-size:12px; line-height:1.4; }
+    .notice.visible { display:block; }
     .foot { margin-top:auto; color:#9aa3b1; font-size:11px; line-height:1.45; }
     .map-wrap { position:relative; min-height:100vh; }
     #map { position:absolute; inset:0; background:#e9eef1; }
@@ -52,13 +57,13 @@
 <body>
   <main class="shell">
     <section class="panel" aria-label="Estado del viaje">
-      <div class="brand"><span class="brand-mark">L</span> livre</div>
+      <div class="brand"><img src="./logo_livre.png" alt="Livre" /><span>Livre</span></div>
       <div>
         <p class="eyebrow">Viaje confirmado</p>
         <h1>Tu auto está en camino</h1>
         <p class="intro">Podés seguir la ubicación del vehículo en tiempo real desde este mapa.</p>
       </div>
-      <div class="status"><span class="pulse"></span><span id="lastUpdate">Ubicación actualizada ahora</span></div>
+      <div class="status" id="statusBox"><span class="pulse"></span><span id="lastUpdate">Ubicación actualizada ahora</span></div>
       <div class="driver">
         <div class="avatar">MR</div>
         <div><strong id="driverName">Martín Rodríguez</strong><span>Conductor verificado</span></div>
@@ -69,7 +74,12 @@
         <div class="stop"><small>Destino</small><strong id="destination">Av. Alem 1253, Bahía Blanca</strong></div>
       </div>
       <div class="eta"><span>Llegada estimada</span><strong id="eta">6 min</strong></div>
-      <button class="button" id="recenter" type="button">Centrar el auto en el mapa</button>
+      <div class="actions">
+        <button class="button" id="recenter" type="button">Centrar mapa</button>
+        <button class="button secondary" id="share" type="button">Compartir viaje</button>
+      </div>
+      <button class="button secondary" id="help" type="button">Necesito ayuda</button>
+      <div class="notice" id="notice" role="status"></div>
       <p class="foot">Este enlace es privado y corresponde únicamente a tu viaje. La ubicación se actualiza automáticamente.</p>
     </section>
     <section class="map-wrap" aria-label="Mapa de seguimiento">
@@ -94,11 +104,19 @@
     let index = 1;
     const trackingToken = new URLSearchParams(location.search).get('token');
     const trackingApi = 'https://livre-cloud-production.up.railway.app/mobility/tracking/';
+    const statusLabels = { pending:'Viaje pendiente', searching:'Buscando conductor', assigned:'Conductor asignado', arriving:'Tu auto está en camino', in_progress:'Viaje en curso', completed:'Viaje finalizado', cancelled:'Viaje cancelado' };
+    const notice = document.getElementById('notice');
+    function showNotice(message) { notice.textContent = message; notice.classList.add('visible'); }
+    function setStatus(status) {
+      const label = statusLabels[status] || status.replaceAll('_', ' ');
+      document.querySelector('.eyebrow').textContent = label;
+      document.getElementById('eta').textContent = status === 'completed' ? 'Llegaste' : status === 'cancelled' ? 'Cancelado' : 'En seguimiento';
+    }
     async function refreshLiveTrip() {
       if (!trackingToken) return;
       try {
         const response = await fetch(trackingApi + encodeURIComponent(trackingToken), { cache: 'no-store' });
-        if (!response.ok) return;
+        if (!response.ok) { showNotice('No pudimos actualizar el viaje. Probá nuevamente en unos segundos.'); return; }
         const trip = await response.json();
         if (trip.driver_name) document.getElementById('driverName').textContent = trip.driver_name;
         if (trip.plate) document.getElementById('plate').textContent = trip.plate;
@@ -109,16 +127,23 @@
         if (trip.destination) document.getElementById('destination').textContent = trip.destination;
         if (Number.isFinite(trip.latitude) && Number.isFinite(trip.longitude)) {
           vehicle.setLatLng([trip.latitude, trip.longitude]);
-          map.setView([trip.latitude, trip.longitude]);
+          if (!vehicle._userMoved) map.setView([trip.latitude, trip.longitude]);
           document.getElementById('lastUpdate').textContent = 'Ubicación actualizada ahora';
           document.getElementById('coordinates').textContent = 'GPS del vehículo · ahora';
         }
-        if (trip.status) document.querySelector('.eyebrow').textContent = trip.status.replace('_', ' ');
+        if (trip.status) setStatus(trip.status);
+        notice.classList.remove('visible');
       } catch (error) {
-        console.warn('No se pudo consultar el seguimiento', error);
+        showNotice('Sin conexión temporal con el seguimiento. El mapa muestra la última ubicación conocida.');
       }
     }
-    document.getElementById('recenter').addEventListener('click', () => map.setView(vehicle.getLatLng(), 16, { animate:true }));
+    map.on('dragstart zoomstart', () => { vehicle._userMoved = true; });
+    document.getElementById('recenter').addEventListener('click', () => { vehicle._userMoved = false; map.setView(vehicle.getLatLng(), 16, { animate:true }); });
+    document.getElementById('share').addEventListener('click', async () => {
+      const shareData = { title:'Mi viaje en Livre', text:'Podés seguir mi viaje en tiempo real:', url:location.href };
+      try { if (navigator.share) await navigator.share(shareData); else await navigator.clipboard.writeText(location.href); showNotice(navigator.share ? 'Viaje compartido.' : 'Link copiado para compartir.'); } catch (_) { /* cancelado por el usuario */ }
+    });
+    document.getElementById('help').addEventListener('click', () => showNotice('Si estás en una emergencia, llamá al 911. Para soporte de Livre, contactá a la agencia que te envió este link.'));
     refreshLiveTrip();
     setInterval(refreshLiveTrip, 10000);
     if (!trackingToken) setInterval(() => {
