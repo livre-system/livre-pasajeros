@@ -4,7 +4,7 @@ Frontend web responsive para mostrar el seguimiento de un viaje desde un link de
 
 ## Demo
 
-La demo actual usa una ruta simulada en Bahía Blanca y mueve el vehículo cada 4,5 segundos para poder presentar la experiencia. No representa GPS real ni debe conectarse a pasajeros reales todavía.
+Sin token, la página conserva una demo visual con una ruta simulada en Bahía Blanca. Con `?token=...`, consulta el viaje real a Livre Cloud y no mueve el vehículo artificialmente.
 
 ## Ejecutar localmente
 
@@ -16,11 +16,10 @@ Abrir http://localhost:4173
 
 ## Próximo contrato
 
-El frontend deberá recibir un token de viaje y consultar a `livre-cloud` mediante un endpoint público seguro. El navegador no debe llamar directamente a MAGIIS ni exponer credenciales.
+El frontend recibe un token de viaje y consulta `GET /mobility/tracking/{token}` en Livre Cloud mediante un endpoint público seguro. El navegador no llama directamente a MAGIIS ni expone credenciales.
 
 Pendientes de integración:
 
-- reemplazar la ruta simulada por coordenadas reales;
-- validar token, vencimiento y autorización por viaje;
+- vencimiento y revocación del token;
 - conectar actualización periódica o WebSocket;
 - configurar dominio, Universal Links y Android App Links cuando exista la app móvil.

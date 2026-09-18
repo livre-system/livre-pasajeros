@@ -93,23 +93,27 @@
     const vehicle = L.marker(route[1], { icon }).addTo(map).bindTooltip('Tu auto', { direction:'top', offset:[0,-31] }).openTooltip();
     let index = 1;
     const trackingToken = new URLSearchParams(location.search).get('token');
-    const trackingApi = 'https://livre-cloud-production.up.railway.app/elevenlabs/tracking/';
+    const trackingApi = 'https://livre-cloud-production.up.railway.app/mobility/tracking/';
     async function refreshLiveTrip() {
       if (!trackingToken) return;
       try {
         const response = await fetch(trackingApi + encodeURIComponent(trackingToken), { cache: 'no-store' });
         if (!response.ok) return;
         const trip = await response.json();
-        if (trip.driver) document.getElementById('driverName').textContent = trip.driver;
+        if (trip.driver_name) document.getElementById('driverName').textContent = trip.driver_name;
         if (trip.plate) document.getElementById('plate').textContent = trip.plate;
-        if (trip.vehicle) document.getElementById('vehicle').textContent = trip.vehicle;
+        if (trip.vehicle_model || trip.vehicle_color) {
+          document.getElementById('vehicle').textContent = [trip.vehicle_color, trip.vehicle_model].filter(Boolean).join(' ');
+        }
+        if (trip.origin) document.querySelector('.stop strong').textContent = trip.origin;
         if (trip.destination) document.getElementById('destination').textContent = trip.destination;
-        if (trip.location && Number.isFinite(trip.location.lat) && Number.isFinite(trip.location.lng)) {
-          vehicle.setLatLng([trip.location.lat, trip.location.lng]);
-          map.setView([trip.location.lat, trip.location.lng]);
+        if (Number.isFinite(trip.latitude) && Number.isFinite(trip.longitude)) {
+          vehicle.setLatLng([trip.latitude, trip.longitude]);
+          map.setView([trip.latitude, trip.longitude]);
           document.getElementById('lastUpdate').textContent = 'Ubicación actualizada ahora';
           document.getElementById('coordinates').textContent = 'GPS del vehículo · ahora';
         }
+        if (trip.status) document.querySelector('.eyebrow').textContent = trip.status.replace('_', ' ');
       } catch (error) {
         console.warn('No se pudo consultar el seguimiento', error);
       }
@@ -117,7 +121,7 @@
     document.getElementById('recenter').addEventListener('click', () => map.setView(vehicle.getLatLng(), 16, { animate:true }));
     refreshLiveTrip();
     setInterval(refreshLiveTrip, 10000);
-    setInterval(() => {
+    if (!trackingToken) setInterval(() => {
       index = (index + 1) % route.length;
       vehicle.setLatLng(route[index]);
       document.getElementById('lastUpdate').textContent = 'Ubicación actualizada ahora';
