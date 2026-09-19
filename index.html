@@ -118,14 +118,19 @@
     .map-label b:before { background:#29c58a; box-shadow:0 0 0 3px rgba(41,197,138,.18); }
     .leaflet-control-zoom { background:#fff; }
     @media (max-width:760px) {
-      .panel { left:8px; right:8px; bottom:8px; width:auto; max-height:68vh; padding:0 18px 14px; border-radius:18px; }
+      body { overflow:hidden; background:#e9eef1; }
+      .shell,.map-wrap { min-height:100dvh; height:100dvh; }
+      .panel { left:8px; right:8px; bottom:8px; width:auto; max-height:68dvh; padding:0 18px calc(14px + env(safe-area-inset-bottom)); border-radius:18px; }
       .panel:before { content:""; display:block; width:34px; height:4px; margin:8px auto 0; border-radius:99px; background:#d5d5d5; }
       .brand { margin:0 -18px; padding:0 18px; }
       .hero { padding-top:14px; }
       h1 { font-size:24px; }
       .driver { padding:13px 0; }
       .route-card { margin-top:10px; }
+      .button { min-height:46px; }
+      #help { min-height:46px; }
       .map-label { top:14px; right:14px; }
+      .leaflet-control-zoom { margin-right:10px!important; margin-bottom:calc(68dvh + 20px)!important; }
     }
   </style>
 </head>
