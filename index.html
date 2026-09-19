@@ -61,9 +61,49 @@
     .leaflet-control-zoom { border:1px solid #ddd!important; box-shadow:0 4px 15px rgba(0,0,0,.12)!important; }
     .leaflet-control-zoom a { color:var(--brand)!important; border:0!important; font-weight:600; }
     .vehicle-pin { width:42px; height:42px; display:grid; place-items:center; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:var(--brand); border:3px solid #fff; box-shadow:0 4px 14px rgba(181,0,48,.35); }
-    .vehicle-pin span { transform:rotate(45deg); font-size:17px; }
-    @media (max-width:760px) { .shell { display:flex; flex-direction:column-reverse; } .map-wrap { min-height:43vh; height:43vh; } #map { position:absolute; } .panel { border-right:0; border-top:1px solid var(--line); padding:0 20px 18px; } .brand { margin:0 -20px; padding:0 20px; } .hero { padding-top:24px; } .foot { margin-top:0; padding-top:22px; } .map-label { top:12px; right:12px; min-width:0; } h1 { font-size:28px; } .brand:after { display:none; } }
-
+    /* Mobility app layout: map first, trip sheet floating above it. */
+    .shell { position:relative; display:block; min-height:100vh; overflow:hidden; background:#e9eef1; }
+    .map-wrap { position:absolute; inset:0; min-height:100vh; height:100%; }
+    #map { position:absolute; inset:0; }
+    .map-wrap:after { background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 22%,transparent 72%,rgba(0,0,0,.08)); }
+    .panel { z-index:1000; position:absolute; left:24px; bottom:24px; width:394px; max-height:calc(100vh - 48px); overflow:auto; padding:0 22px 18px; border:1px solid rgba(0,0,0,.1); border-radius:18px; background:rgba(255,255,255,.97); box-shadow:0 14px 45px rgba(0,0,0,.2); }
+    .brand { height:58px; margin:0 -22px; padding:0 20px; border-bottom:1px solid #ededed; font-size:17px; }
+    .brand img { width:30px; height:30px; }
+    .brand:after { content:'VIAJE EN CURSO'; color:#999; font-size:8px; }
+    .hero { padding:18px 0 15px; }
+    .eyebrow { margin-bottom:7px; font-size:9px; }
+    h1 { max-width:none; font-size:25px; line-height:1.12; }
+    .intro { margin-top:7px; font-size:12px; }
+    .status { margin-bottom:0; padding:10px 12px; border-radius:999px; font-size:11px; }
+    .driver { padding:17px 0; }
+    .avatar { width:42px; height:42px; }
+    .route-card { margin-top:15px; padding:14px; }
+    .route { gap:17px; }
+    .stop strong { font-size:12px; }
+    .eta { margin-top:10px; padding:12px 14px; }
+    .eta strong { font-size:19px; }
+    .actions { margin-top:14px; }
+    .button { padding:11px 9px; }
+    #help { margin-top:7px; }
+    .foot { padding-top:17px; }
+    .map-label { top:20px; right:20px; border-radius:999px; padding:11px 14px; min-width:0; }
+    .map-label b { margin:0; }
+    .map-label span { display:none; }
+    .leaflet-control-zoom { margin-right:15px!important; margin-bottom:15px!important; border-radius:10px!important; overflow:hidden; }
+    @media (max-width:760px) {
+      .map-wrap { min-height:100vh; height:100vh; }
+      .panel { left:10px; right:10px; bottom:10px; width:auto; max-height:64vh; padding:0 18px 15px; border-radius:20px; }
+      .brand { margin:0 -18px; padding:0 18px; }
+      .brand:after { display:none; }
+      .hero { padding-top:16px; }
+      h1 { font-size:23px; }
+      .intro { display:none; }
+      .driver { padding:14px 0; }
+      .route-card { margin-top:12px; }
+      .foot { display:none; }
+      .map-label { top:14px; right:14px; }
+      .leaflet-control-zoom { margin-right:10px!important; margin-bottom:calc(64vh + 20px)!important; }
+    }
   </style>
 </head>
 <body>
