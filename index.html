@@ -177,8 +177,9 @@
     ];
     const map = L.map('map', { zoomControl: false }).setView(route[1], 15);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
-    L.polyline(route, { color:'#ec5b37', weight:5, opacity:.75, dashArray:'8 10' }).addTo(map);
+    const tileAttribution = '&copy; OpenStreetMap contributors';
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { attribution:tileAttribution, maxZoom:20, subdomains:'abc' }).addTo(map);
+    L.polyline(route, { color:'#e8003d', weight:5, opacity:.82, dashArray:'8 10', lineCap:'round' }).addTo(map);
     L.circleMarker(route[0], { radius:7, color:'#fff', weight:3, fillColor:'#172033', fillOpacity:1 }).addTo(map).bindTooltip('Origen');
     L.circleMarker(route[route.length - 1], { radius:7, color:'#fff', weight:3, fillColor:'#14946b', fillOpacity:1 }).addTo(map).bindTooltip('Destino');
     const icon = L.divIcon({ className:'', html:'<div class="vehicle-pin"><span>🚗</span></div>', iconSize:[42,42], iconAnchor:[21,38] });
