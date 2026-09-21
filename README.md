@@ -1,5 +1,14 @@
 # Livre Pasajeros
 
+Web para pedir un viaje de prueba y seguirlo con un link privado. El pedido se crea en Livre Cloud, queda pendiente de asignación en el CRM y luego muestra el estado y el GPS del conductor.
+
+## Contrato
+
+- `POST /mobility/requests`
+- `GET /mobility/tracking/{tracking_token}`
+
+La app restringe los pedidos de prueba a Bahía Blanca y alrededores.
+
 Frontend web responsive para mostrar el seguimiento de un viaje desde un link de WhatsApp.
 
 ## Demo
