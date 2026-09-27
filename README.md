@@ -1,6 +1,6 @@
 # Livre Pasajeros
 
-Web para pedir un viaje de prueba y seguirlo con un link privado. El pedido se crea en Livre Cloud, queda pendiente de asignación en el CRM y luego muestra el estado y el GPS del conductor.
+Web para pedir un viaje de prueba y seguirlo con un link privado. El pedido se crea en Livre Cloud y queda asignado a un conductor disponible de la base local.
 
 ## Contrato
 
@@ -27,7 +27,7 @@ Abrir http://localhost:4173
 
 El frontend recibe un token privado de viaje y consulta `GET /mobility/tracking/{token}` en Livre Cloud. El navegador nunca llama directamente a MAGIIS ni expone credenciales.
 
-El CRM alimenta este flujo desde Livre Cloud: `GET /crm/travels/live` sincroniza la asignación del viaje, conductor y vehículo en `livi_trips`; luego el seguimiento público solo devuelve los datos mínimos del viaje asociado al token. La ubicación debe ser enviada por el circuito autenticado del conductor mediante `POST /mobility/trips/{id}/location`.
+El dashboard consulta exclusivamente los snapshots locales importados en Livre Cloud. MAGIIS no participa en el pedido, asignación, estados, GPS ni dashboard. Las altas y cambios operativos deben implementarse sobre tablas propias antes de habilitarse; no se envían cambios a proveedores externos.
 
 ## Qué ya tiene esta vista
 
