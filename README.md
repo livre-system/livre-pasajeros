@@ -38,6 +38,30 @@ El dashboard consulta exclusivamente los snapshots locales importados en Livre C
 - compartir el link privado y ayuda básica;
 - identidad visual del CRM Livre: rojo `#E8003D`, rojo oscuro `#B50030`, blanco, grises e imagen oficial del logo.
 
+## Publicación móvil
+
+La interfaz actual sigue siendo la fuente web, pero el proyecto ya incluye un contenedor nativo Capacitor para publicar la misma app en las tiendas:
+
+- identificador: `com.livre.pasajeros`;
+- Android: proyecto `android/` para Google Play;
+- iOS: proyecto `ios/` para App Store;
+- bundle web: `www/`, generado desde `index.html` y `logo_livre.png`;
+- configuración: `capacitor.config.ts`;
+- sincronización: `npm run cap:sync`.
+
+Comandos de desarrollo:
+
+```bash
+npm install
+npm run cap:sync
+npx cap open android
+npx cap open ios
+```
+
+La app nativa no depende de Safari ni Chrome para ejecutarse: la UI se carga dentro del WebView oficial de cada plataforma y sigue consultando únicamente Livre Cloud. Para publicar faltan tareas propias de las tiendas: íconos y splash finales, certificados/perfiles de firma, cuenta de Google Play, cuenta Apple, textos de privacidad y revisión en dispositivos reales. Android requiere Android Studio/JDK; iOS requiere macOS/Xcode.
+
+Las notificaciones push, deep links (Universal Links/App Links), permisos nativos y publicación de actualizaciones deben agregarse cuando exista el contrato de producto correspondiente; no se inventan en esta etapa porque el backend actual solo define pedido y seguimiento por token.
+
 ## Próximas conexiones reales
 
 - vencimiento y revocación del token;
