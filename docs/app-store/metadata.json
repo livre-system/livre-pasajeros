@@ -1,0 +1,31 @@
+{
+  "appStore": {
+    "subtitle": "Pedí y seguí tu viaje",
+    "description": "Solicitá un viaje en Bahía Blanca y alrededores. Livre envía tu pedido a un conductor disponible y te permite seguir el estado y la ubicación desde un enlace privado.",
+    "keywords": "viajes,remis,taxi,Bahía Blanca,movilidad,seguimiento",
+    "supportUrl": "[URL_PUBLICA]/support.html",
+    "privacyPolicyUrl": "[URL_PUBLICA]/privacy.html",
+    "marketingUrl": "[URL_PUBLICA]/",
+    "reviewNotes": "La app permite crear un pedido de prueba en Bahía Blanca y consultar el seguimiento con el token devuelto por el backend. No requiere cuenta ni permisos sensibles. Reemplazar este texto con credenciales/demo de revisión si el flujo productivo las requiere."
+  },
+  "playStore": {
+    "shortDescription": "Pedí y seguí tu viaje en Bahía Blanca.",
+    "fullDescription": "Solicitá un viaje y consultá su estado y ubicación desde un enlace privado. La cobertura y disponibilidad dependen de la operación de Livre.",
+    "supportUrl": "[URL_PUBLICA]/support.html",
+    "privacyPolicyUrl": "[URL_PUBLICA]/privacy.html"
+  },
+  "dataSafetyDraft": {
+    "collected": [
+      {"category": "Personal info", "data": "Name", "purpose": "App functionality", "linkedToUser": true, "shared": "Operational service only"},
+      {"category": "Location", "data": "User-entered origin and destination", "purpose": "App functionality", "linkedToUser": true, "shared": "Operational service only"}
+    ],
+    "devicePermissions": "No microphone, camera, contacts, notifications or device-location permission is declared by the app."
+  },
+  "beforeSubmission": [
+    "Replace [URL_PUBLICA] with a public HTTPS domain controlled by Livre.",
+    "Complete the legal entity, address, privacy email and support channel in privacy.html, terms.html and support.html.",
+    "Confirm retention periods and legal jurisdiction with the operator's legal/privacy owner.",
+    "Upload final icons, screenshots and age-rating answers in App Store Connect/Google Play Console.",
+    "Run the complete flow on physical iPhone and Android devices against the intended production contract."
+  ]
+}

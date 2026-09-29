@@ -62,6 +62,18 @@ La app nativa no depende de Safari ni Chrome para ejecutarse: la UI se carga den
 
 Las notificaciones push, deep links (Universal Links/App Links), permisos nativos y publicación de actualizaciones deben agregarse cuando exista el contrato de producto correspondiente; no se inventan en esta etapa porque el backend actual solo define pedido y seguimiento por token.
 
+## Privacidad, soporte y tiendas
+
+La app incluye páginas públicas dentro del bundle: `privacy.html`, `terms.html` y `support.html`. También incluye un borrador de metadatos en `docs/app-store/metadata.json` y el manifiesto de privacidad de Apple en `ios/App/App/PrivacyInfo.xcprivacy`.
+
+Antes de enviar a revisión hay que completar los datos reales marcados como `[COMPLETAR]`, publicar esas páginas en una URL HTTPS estable y cargar esa URL en App Store Connect y Google Play Console. No se deben enviar políticas con datos inventados ni publicar mientras esos campos estén vacíos.
+
+La app no declara permisos de micrófono, cámara, contactos, notificaciones ni ubicación del dispositivo. El pasajero ingresa nombre, origen y destino; el backend usa esos datos para gestionar el viaje y mostrar el seguimiento. El borrador de la ficha de privacidad debe ser revisado por el titular legal del servicio.
+
+## Estado de compilación
+
+Linux puede instalar Node, sincronizar Capacitor y preparar Android. Xcode no existe para Linux y no se puede instalar de forma compatible: para abrir, firmar, probar en iPhone y archivar la app iOS hace falta una Mac con Xcode. No se publicó ninguna aplicación.
+
 ## Próximas conexiones reales
 
 - vencimiento y revocación del token;
