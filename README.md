@@ -31,12 +31,15 @@ El dashboard consulta exclusivamente los snapshots locales importados en Livre C
 
 ## Qué ya tiene esta vista
 
-- mapa con vehículo y ruta;
-- estado del viaje y datos del conductor/vehículo;
-- actualización automática cada 10 segundos;
-- aviso de conexión o última ubicación conocida;
-- compartir el link privado y ayuda básica;
-- identidad visual del CRM Livre: rojo `#E8003D`, rojo oscuro `#B50030`, blanco, grises e imagen oficial del logo.
+- rediseño responsive con mapa como superficie principal y tarjeta de solicitud/seguimiento;
+- mismo stack cartográfico del conductor: Leaflet 1.9.4 sobre OpenStreetMap;
+- pedido con origen, destino, nombre e importe acordado, alineado con `TripRequest` de Livre Cloud;
+- seguimiento por token privado, estados del CRM, ubicación del conductor y datos del vehículo;
+- actualización automática cada 10 segundos y chat pasajero-conductor aislado en `passenger_chat`;
+- compartir el link privado, volver a pedir y aviso de última ubicación conocida;
+- identidad visual coherente con el CRM Livre: rojo `#E8003D`, azul petróleo `#101820`, teal operativo y blanco.
+
+La app no geocodifica ni calcula rutas en el navegador: el contrato público actual solo entrega origen, destino y snapshot GPS. Por eso el mapa de pedido muestra el área de servicio y el mapa de seguimiento muestra el vehículo únicamente cuando Cloud entrega coordenadas; no se dibujan trazados inventados.
 
 ## Publicación móvil
 
