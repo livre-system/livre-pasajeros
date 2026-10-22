@@ -20,6 +20,8 @@
       requestPending = false;
     }
 
+    let runNow = null;
+
     function start(poll, onResult, onError) {
       stop();
       active = true;
@@ -47,11 +49,12 @@
         }
       };
 
+      runNow = run;
       run();
       timerId = setIntervalFn(run, intervalMs);
     }
 
-    return { start, stop };
+    return { start, stop, refresh: () => runNow?.() };
   }
 
   root.LivreTrackingPolling = { create };
