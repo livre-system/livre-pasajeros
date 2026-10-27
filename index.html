@@ -77,7 +77,7 @@
       renderAccount();
       completeEmailLink();
       function authHeaders(){return passengerSession?.token?{Authorization:'Bearer '+passengerSession.token}:{};}
-      function baseMap(id){const m=L.map(id,{zoomControl:false}).setView([-38.718,-62.266],14);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(m);L.control.zoom({position:'bottomright'}).addTo(m);setTimeout(()=>m.invalidateSize(),100);return m}
+      function baseMap(id){const m=L.map(id,{zoomControl:false}).setView([-38.718,-62.266],14);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap contributors © CARTO',subdomains:'abcd',maxZoom:20,crossOrigin:true}).addTo(m);L.control.zoom({position:'bottomright'}).addTo(m);setTimeout(()=>m.invalidateSize(),100);return m}
       map=baseMap('map');L.circle([-38.718,-62.266],{radius:3500,color:'#087f83',weight:2,fillColor:'#087f83',fillOpacity:.07}).addTo(map);
       function showRequestError(text){$('requestError').textContent=text;$('requestError').classList.remove('hidden')}
       function requirePassengerLogin(){if(passengerSession?.token)return true;showRequestError('Para pedir un viaje, primero iniciá sesión o creá tu cuenta.');$('accountBar').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('authEmail')?.focus(),350);return false}
