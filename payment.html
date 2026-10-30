@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><title>Livre · Pago</title>
+  <style>body{font-family:system-ui,sans-serif;background:#f6f7f8;color:#101820;margin:0;display:grid;place-items:center;min-height:100vh}.card{background:#fff;max-width:520px;margin:20px;padding:28px;border-radius:20px;box-shadow:0 12px 40px #10182018}h1{margin-top:0}.status{padding:14px;border-radius:12px;background:#fff7e6}.ok{background:#e8f7f0;color:#08704f}.error{background:#fff0f3;color:#9d1237}a,button{display:inline-block;margin-top:16px;padding:12px 16px;border-radius:10px;border:0;background:#e8003d;color:#fff;text-decoration:none;font-weight:700;cursor:pointer}</style>
+</head>
+<body><main class="card"><h1>Livre Ahorro</h1><p id="status" class="status">Estamos verificando tu pago…</p><div id="actions"></div></main>
+<script>
+(() => {
+  const API='https://livre-cloud-production.up.railway.app';
+  const params=new URLSearchParams(location.search), reference=params.get('reference');
+  const status=document.getElementById('status'), actions=document.getElementById('actions');
+  if(!reference){status.className='status error';status.textContent='No encontramos la referencia del pago.';return}
+  const esc=value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  async function check(){try{const r=await fetch(API+'/payments/status?reference='+encodeURIComponent(reference)+'&_='+Date.now(),{cache:'no-store'});const data=await r.json();if(!r.ok)throw Error(data.detail||'No pudimos consultar el pago');if(data.status==='approved'){const complete=await fetch(API+'/payments/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reference})});const result=await complete.json();if(!complete.ok)throw Error(result.detail||'El pago fue aprobado, pero no pudimos confirmar el viaje');if(result.tracking_url){status.className='status ok';status.textContent='Pago aprobado. Tu viaje quedó confirmado.';actions.innerHTML='<a href="'+esc(result.tracking_url)+'">Ver mapa y seguimiento</a>';return}}if(['rejected','cancelled'].includes(data.status)){status.className='status error';status.textContent='El pago no fue aprobado. Volvé a solicitar el link desde WhatsApp.';return}status.textContent='Pago recibido. Esperando confirmación de Mercado Pago…';setTimeout(check,4000)}catch(error){status.className='status error';status.textContent=error.message;setTimeout(check,6000)}}
+  check();
+})();
+</script></body></html>
