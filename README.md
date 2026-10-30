@@ -6,6 +6,7 @@ Web para pedir un viaje de prueba y seguirlo con un link privado. El pedido se c
 
 - `POST /mobility/requests`
 - `GET /mobility/tracking/{tracking_token}`
+- `GET /mobility/tracking/{tracking_token}/route?phase=pickup|trip`
 
 La app restringe los pedidos de prueba a Bahía Blanca y alrededores.
 
@@ -39,7 +40,7 @@ El dashboard consulta exclusivamente los snapshots locales importados en Livre C
 - compartir el link privado, volver a pedir y aviso de última ubicación conocida;
 - identidad visual coherente con el CRM Livre: rojo `#E8003D`, azul petróleo `#101820`, teal operativo y blanco.
 
-La app no geocodifica ni calcula rutas en el navegador: el contrato público actual solo entrega origen, destino y snapshot GPS. Por eso el mapa de pedido muestra el área de servicio y el mapa de seguimiento muestra el vehículo únicamente cuando Cloud entrega coordenadas; no se dibujan trazados inventados.
+La app no geocodifica ni calcula rutas en el navegador: Cloud entrega la geometría vial y el snapshot GPS. El mapa de seguimiento muestra el tramo conductor→retiro y luego retiro→destino, sin exponer credenciales ni endpoints del conductor.
 
 ## Publicación móvil
 
