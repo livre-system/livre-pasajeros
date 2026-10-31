@@ -44,6 +44,23 @@
     .intro{padding-top:20px}.intro h1{font-weight:850}.intro .trust{display:none}.request-layout{grid-template-columns:minmax(340px,420px) minmax(0,1fr);gap:24px}.panel{border-radius:24px}.form-panel{padding:28px}.request-layout{position:relative;z-index:1}.form-panel{position:relative;z-index:2}.map-panel{position:relative;z-index:1;overflow:hidden}.map-title{background:var(--surface-raised)!important}.map-legend{background:var(--surface-raised)!important}.route-status{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
     .account-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#0810168c;backdrop-filter:blur(10px);overflow:auto}.account-modal.hidden{display:none}.account-modal-card{width:min(420px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:28px;border:1px solid #fff;background:#fff;border-radius:24px;box-shadow:0 28px 90px #0005}.account-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}.account-modal-head h2{margin:0;font-size:25px;letter-spacing:-.05em}.account-modal-head p{margin:6px 0 0;color:var(--muted);font-size:13px}.modal-close{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font-size:20px;cursor:pointer}.auth-form{display:grid;gap:10px}.auth-form input{height:48px;width:100%;border:1px solid #ccd3d8;border-radius:12px;padding:0 13px;background:var(--surface-raised);color:var(--ink);outline:none}.auth-form input:focus{border-color:var(--focus);box-shadow:0 0 0 4px #087f8317}.auth-form .primary{height:48px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-weight:850;cursor:pointer}.auth-divider{display:flex;align-items:center;gap:10px;color:#89949b;font-size:11px;margin:8px 0}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line);flex:1}.auth-socials{display:grid;grid-template-columns:1fr 1fr;gap:8px}.auth-social,.auth-secondary{height:44px;border:1px solid #ccd3d8;border-radius:11px;background:#fff;color:var(--ink);font-weight:750;cursor:pointer}.auth-social{display:flex;align-items:center;justify-content:center;gap:8px}.auth-social svg{width:17px;height:17px}.auth-secondary{width:100%;margin-top:8px}.auth-error{min-height:17px;color:var(--brand);font-size:11px}.modal-legal{margin:17px 0 0;color:var(--muted);font-size:11px;line-height:1.45;text-align:center}
     @media (max-width:700px){.app-header{height:64px}.brand-mark{height:27px;max-width:88px}.header-meta{display:none}.account-trigger{height:38px}.theme-toggle{height:38px}.header-actions{gap:6px}.intro{padding-top:14px}.intro h1{font-size:39px}.request-layout{grid-template-columns:1fr}.form-panel{padding:20px}.account-modal{padding:14px}.account-modal-card{padding:22px;border-radius:20px}}
+    @media (max-width:700px){
+      .tracking-shell{isolation:isolate;overscroll-behavior:none}
+      .tracking-card{max-height:62dvh;touch-action:pan-y}
+      .tracking-card::before{content:"";display:block;width:42px;height:4px;margin:-7px auto 13px;border-radius:999px;background:var(--line)}
+      .tracking-actions .btn{min-height:48px}
+      .map-panel #map{touch-action:pan-x pan-y}
+    }
+    @media (orientation:landscape) and (max-height:520px){
+      .app-header{height:54px}
+      .app{padding-top:14px;padding-bottom:22px}
+      .intro{display:none}
+      .request-layout{grid-template-columns:minmax(280px,40%) 1fr;gap:12px}
+      .form-panel{padding:14px}
+      .field{margin-top:8px}
+      .map-panel #map{height:calc(100dvh - 54px);min-height:260px}
+      .tracking-card{max-height:78dvh;padding-top:14px}
+    }
   </style>
 </head>
 <body>
