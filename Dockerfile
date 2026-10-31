@@ -1,5 +1,6 @@
 FROM nginx:alpine
 
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY index.html /usr/share/nginx/html/index.html
 COPY logo_livre.png /usr/share/nginx/html/logo_livre.png
 COPY tracking-polling.js /usr/share/nginx/html/tracking-polling.js
