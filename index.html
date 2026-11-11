@@ -74,7 +74,7 @@
   <main id="requestView" class="app">
     <section class="intro"><div><p class="eyebrow">Movilidad simple</p><h1>Tu próximo viaje,<br>sin vueltas.</h1><p>Elegí tu recorrido y recibí el seguimiento en tiempo real desde Livre.</p></div></section>
     <div class="request-layout">
-      <form id="requestForm" class="panel form-panel" novalidate>
+      <form id="requestForm" class="panel form-panel" novalidate onsubmit="return false;">
         <div class="panel-heading"><div><h2>Pedí tu viaje</h2><p>Completá los datos para enviar la solicitud.</p></div><span class="step">DATOS DEL VIAJE</span></div>
         <div class="field"><label for="origin">PUNTO DE PARTIDA</label><div class="input-wrap"><span class="marker"></span><input id="origin" required minlength="3" autocomplete="street-address"></div></div>
         <div class="field"><label for="destination">DESTINO</label><div class="input-wrap destination"><span class="marker"></span><input id="destination" required minlength="3" autocomplete="street-address"></div></div>
