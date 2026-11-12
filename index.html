@@ -61,6 +61,20 @@
       .map-panel #map{height:calc(100dvh - 54px);min-height:260px}
       .tracking-card{max-height:78dvh;padding-top:14px}
     }
+    /* ── Mejoras visuales del panel de tracking ── */
+    #tripStatusPanel .panel-heading h2{font-size:22px;letter-spacing:-.05em}
+    #inlineTrackStatus{font-size:13px;border-radius:11px;gap:8px}
+    #inlineTrackStatus strong{font-size:13px;font-weight:800}
+    #inlineTrackStatus span{font-size:16px;line-height:1}
+    .driver-card{gap:14px;padding-top:18px;margin-top:2px}
+    .driver-avatar{width:46px;height:46px;border-radius:14px;font-size:18px;font-weight:900;background:var(--ink);flex:none}
+    #inlineDriverName{font-size:14px;font-weight:800;letter-spacing:-.02em}
+    #inlineVehicleInfo{font-size:11px;margin-top:4px;color:var(--muted)}
+    .route-list{margin:18px 0 16px}
+    .route-label{font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--muted)}
+    .route-address{font-size:13px;font-weight:650;margin-top:4px;line-height:1.3}
+    .inline-actions{gap:8px;margin-top:18px}
+    .inline-actions .btn{height:46px;font-size:13px;font-weight:800;border-radius:12px}
     /* ── Single-screen tracking (inline panel) ── */
     #requestForm.trip-active{display:none!important}
     #tripStatusPanel{display:none}
@@ -256,16 +270,52 @@
 
       // ── updateDriver: panel inline ──
       function updateInlineDriver(trip){
-        const name=trip.driver_name;
-        if(!name){$('inlineDriverCard').classList.add('hidden');return}
+        const raw=trip.driver_name;
+        if(!raw){$('inlineDriverCard').classList.add('hidden');return}
+        const firstName=raw.trim().split(/\s+/)[0];
         $('inlineDriverCard').classList.remove('hidden');
-        $('inlineDriverName').textContent=name;
-        $('inlineVehicleInfo').textContent=[trip.vehicle_model,trip.vehicle_color,trip.plate].filter(Boolean).join(' · ')||'Vehículo Livre asignado';
+        $('inlineDriverName').textContent=firstName;
+        // Avatar: inicial del primer nombre
+        $('inlineDriverCard').querySelector('.driver-avatar').textContent=firstName[0].toUpperCase();
+        const parts=[trip.vehicle_model,trip.vehicle_color,trip.plate].filter(Boolean);
+        $('inlineVehicleInfo').textContent=parts.length?parts.join(' · '):'Vehículo Livre';
       }
 
-      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];if(!trackMarker)trackMarker=L.marker(point,{icon:trackRoutePhase==='trip'?L.divIcon({html:'🚗',className:'',iconSize:[24,24],iconAnchor:[12,12]}):L.icon({iconUrl:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41]}),title:'Vehículo Livre'}).addTo(trackMap);else trackMarker.setLatLng(point);if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
+      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];if(!trackMarker)trackMarker=L.marker(point,{icon:makeIcon(SVG_CAR,36,36,18,18),title:'Vehículo Livre'}).addTo(trackMap);else trackMarker.setLatLng(point);if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
 
-      async function updateTrackingRoute(token,trip,signal){const phase=trip.status==='in_progress'?'trip':'pickup';if(!['assigned','arriving','in_progress'].includes(trip.status))return;if(phase==='trip'&&trackRoutePhase===phase&&trackRouteLine)return;const phaseChanged=trackRoutePhase!==phase;const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/route?phase='+phase,{signal});if(!response.ok)return;const route=await response.json();const points=(route.coordinates||[]).map(([lng,lat])=>[lat,lng]).filter(point=>point.every(Number.isFinite));if(points.length<2)return;trackRouteLine?.remove();trackRouteStops.forEach(marker=>marker.remove());trackRouteStops=[];trackRouteLine=L.polyline(points,{color:phase==='pickup'?'#087f83':'#E8003D',weight:6,opacity:.8}).addTo(trackMap);const originIcon=L.divIcon({html:'🏁',className:'',iconSize:[28,28],iconAnchor:[14,14]}),destIcon=L.divIcon({html:'📍',className:'',iconSize:[28,28],iconAnchor:[14,14]});trackRouteStops=[L.marker(points[0],{icon:originIcon}).addTo(trackMap),L.marker(points[points.length-1],{icon:destIcon}).addTo(trackMap)];if(phase==='trip'&&trackMarker){trackMarker.setIcon(L.divIcon({html:'🚗',className:'',iconSize:[24,24],iconAnchor:[12,12]}))};trackRoutePhase=phase;if(phaseChanged)trackMap.fitBounds(trackRouteLine.getBounds(),{padding:[28,28],maxZoom:16})}
+      // ── Iconos SVG profesionales ──
+      const SVG_ORIGIN=`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#087f83" stroke="#fff" stroke-width="2.5"/><circle cx="14" cy="14" r="5" fill="#fff"/></svg>`;
+      const SVG_DEST=`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.33 14 22 14 22S28 23.33 28 14C28 6.27 21.73 0 14 0z" fill="#e8003d"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>`;
+      const SVG_CAR=`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#101820" stroke="#fff" stroke-width="2"/><path d="M9 20l2-5h14l2 5v3H9v-3zm3 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm12 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="#fff"/><path d="M11.5 20l1.5-4h10l1.5 4H11.5z" fill="#087f83"/></svg>`;
+      function makeIcon(svg,w,h,ax,ay){return L.divIcon({html:svg,className:'',iconSize:[w,h],iconAnchor:[ax,ay]})}
+
+      async function updateTrackingRoute(token,trip,signal){
+        const phase=trip.status==='in_progress'?'trip':'pickup';
+        if(!['assigned','arriving','in_progress'].includes(trip.status))return;
+        if(phase==='trip'&&trackRoutePhase===phase&&trackRouteLine)return;
+        const phaseChanged=trackRoutePhase!==phase;
+        const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/route?phase='+phase,{signal});
+        if(!response.ok)return;
+        const route=await response.json();
+        const points=(route.coordinates||[]).map(([lng,lat])=>[lat,lng]).filter(p=>p.every(Number.isFinite));
+        if(points.length<2)return;
+        trackRouteLine?.remove();
+        trackRouteStops.forEach(m=>m.remove());
+        trackRouteStops=[];
+        // Línea con sombra sutil: capa base oscura + capa de color
+        const baseColor=phase==='pickup'?'#055e61':'#9d1237';
+        const lineColor=phase==='pickup'?'#087f83':'#e8003d';
+        const shadow=L.polyline(points,{color:baseColor,weight:9,opacity:.18}).addTo(trackMap);
+        trackRouteLine=L.polyline(points,{color:lineColor,weight:4.5,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+        trackRouteStops=[shadow,
+          L.marker(points[0],{icon:makeIcon(SVG_ORIGIN,28,28,14,14)}).addTo(trackMap),
+          L.marker(points[points.length-1],{icon:makeIcon(SVG_DEST,28,36,14,34)}).addTo(trackMap)
+        ];
+        // Actualizar ícono del vehículo si ya existe
+        if(trackMarker){trackMarker.setIcon(makeIcon(SVG_CAR,36,36,18,18))}
+        trackRoutePhase=phase;
+        if(phaseChanged)trackMap.fitBounds(trackRouteLine.getBounds(),{padding:[36,36],maxZoom:16});
+      }
 
       async function fetchFresh(url,options={}){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000),externalSignal=options.signal,abort=()=>controller.abort();externalSignal?.addEventListener('abort',abort,{once:true});try{return await fetch(url+(url.includes('?')?'&':'?')+'_='+Date.now(),{...options,cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout);externalSignal?.removeEventListener('abort',abort)}}
 
