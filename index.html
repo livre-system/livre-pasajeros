@@ -165,6 +165,7 @@
       $('shareTrip').addEventListener('click',async()=>{const url=location.href;try{if(navigator.share)await navigator.share({title:'Seguimiento de mi viaje Livre',url});else{await navigator.clipboard.writeText(url);$('trackNotice').textContent='Link copiado para compartir.';$('trackNotice').classList.remove('hidden')}}catch(_){}});
       $('passengerMessageForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('passengerMessage'),body=input.value.trim();if(!body||!currentTrackingToken)return;input.disabled=true;try{const response=await sendMessageWithRetry(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body,client_message_id:messageId()})});if(!response.ok)throw Error('No se pudo enviar el mensaje');input.value='';await refreshPassengerMessages(currentTrackingToken)}catch(error){$('chatNotice').textContent=error.message}finally{input.disabled=false}});
       const token=new URLSearchParams(location.search).get('token');if(token)showTracking(token);
+      window.$=$;window.submitTripRequest=submitTripRequest;window.refreshQuote=refreshQuote;window.showTracking=showTracking;window.resetTrackingView=resetTrackingView;window.currentQuote=currentQuote;window.passengerSession=passengerSession;window.renderServiceOptions=renderServiceOptions;
     })();
   </script>
 </body>
