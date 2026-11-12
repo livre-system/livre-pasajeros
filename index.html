@@ -61,6 +61,22 @@
       .map-panel #map{height:calc(100dvh - 54px);min-height:260px}
       .tracking-card{max-height:78dvh;padding-top:14px}
     }
+    /* ── Single-screen tracking (inline panel) ── */
+    #requestForm.trip-active{display:none!important}
+    #tripStatusPanel{display:none}
+    #tripStatusPanel.active{display:block}
+    /* trackMap lives inside .map-panel alongside #map */
+    #trackMap{height:100%;min-height:430px;display:none}
+    #trackMap.active{display:block}
+    #map.trip-active{display:none}
+    /* Driver-arrived accent (status = waiting from backend) */
+    .status-row.arrived{background:#e8f7ef;color:#087f83}
+    /* inline tracking action buttons */
+    .inline-actions{display:grid;gap:9px;margin-top:16px}
+    @media (max-width:700px){
+      #map.trip-active,#trackMap{min-height:0}
+      #trackMap.active{min-height:250px}
+    }
   </style>
 </head>
 <body>
@@ -74,6 +90,7 @@
   <main id="requestView" class="app">
     <section class="intro"><div><p class="eyebrow">Movilidad simple</p><h1>Tu próximo viaje,<br>sin vueltas.</h1><p>Elegí tu recorrido y recibí el seguimiento en tiempo real desde Livre.</p></div></section>
     <div class="request-layout">
+      <!-- ── Formulario de solicitud ── -->
       <form id="requestForm" class="panel form-panel" novalidate>
         <div class="panel-heading"><div><h2>Pedí tu viaje</h2><p>Completá los datos para enviar la solicitud.</p></div><span class="step">DATOS DEL VIAJE</span></div>
         <div class="field"><label for="origin">PUNTO DE PARTIDA</label><div class="input-wrap"><span class="marker"></span><input id="origin" required minlength="3" autocomplete="street-address"></div></div>
@@ -84,12 +101,50 @@
         <div class="form-actions"><button class="btn" id="requestButton" type="submit">Solicitar viaje</button></div>
         <p class="form-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6m0-9h.01"></path></svg><span>Tu solicitud se procesa de forma segura. No compartimos tus datos con proveedores externos.</span></p>
       </form>
-      <section class="panel map-panel" aria-label="Vista previa del recorrido"><div class="map-title"><strong>Tu recorrido</strong><span id="routeStatus" class="route-status">Indicá origen y destino para verlo en el mapa</span></div><div id="map"></div><div class="map-legend"><span><i class="legend-dot teal"></i>Salida</span><span><i class="legend-dot red"></i>Destino</span></div></section>
+
+      <!-- ── Panel de seguimiento inline (misma pantalla) ── -->
+      <div id="tripStatusPanel" class="panel form-panel" aria-live="polite">
+        <div class="panel-heading">
+          <div><h2 id="inlineTripTitle">Tu viaje</h2><p style="margin:5px 0 0;color:var(--muted);font-size:12px">Seguimiento en tiempo real</p></div>
+          <span class="step">EN CURSO</span>
+        </div>
+        <div id="inlineTrackStatus" class="status-row waiting"><strong>Consultando viaje…</strong><span>●</span></div>
+        <div class="route-list" style="margin:16px 0 14px">
+          <div class="route-item"><span class="route-marker"></span><div><span class="route-label">Salida</span><span id="inlineTrackOrigin" class="route-address">—</span></div></div>
+          <div class="route-item"><span class="route-marker"></span><div><span class="route-label">Destino</span><span id="inlineTrackDestination" class="route-address">—</span></div></div>
+        </div>
+        <div id="inlineDriverCard" class="driver-card hidden"><div class="driver-avatar">L</div><div><strong id="inlineDriverName">Conductor asignado</strong><span id="inlineVehicleInfo">Vehículo pendiente</span></div></div>
+        <div class="updated" style="margin-top:14px"><span id="inlineTrackUpdated">Esperando ubicación</span><span>Actualización automática</span></div>
+        <div id="inlineTrackNotice" class="notice hidden" role="status"></div>
+        <div class="inline-actions">
+          <button id="inlineCancelTrip" class="btn danger" type="button">Cancelar viaje</button>
+          <button id="inlineNewTrip" class="btn secondary" type="button">Nuevo pedido</button>
+        </div>
+        <section class="chat" aria-label="Mensajes del viaje">
+          <div class="chat-head"><strong>Mensajes</strong><span id="inlineChatNotice">Canal pasajero · conductor</span></div>
+          <div id="inlineMessages" class="messages"></div>
+          <form id="inlineMessageForm" class="chat-form">
+            <label class="sr-only" for="inlineMessage">Mensaje</label>
+            <input id="inlineMessage" maxlength="1000" placeholder="Escribí un mensaje…" autocomplete="off">
+            <button class="btn" type="submit">Enviar</button>
+          </form>
+        </section>
+      </div>
+
+      <!-- ── Panel de mapa (preview + tracking) ── -->
+      <section class="panel map-panel" aria-label="Vista previa del recorrido">
+        <div class="map-title"><strong>Tu recorrido</strong><span id="routeStatus" class="route-status">Indicá origen y destino para verlo en el mapa</span></div>
+        <div id="map"></div>
+        <!-- trackMap se activa al iniciar un viaje, dentro del mismo panel -->
+        <div id="trackMap"></div>
+        <div class="map-legend"><span><i class="legend-dot teal"></i>Salida</span><span><i class="legend-dot red"></i>Destino</span></div>
+      </section>
     </div>
   </main>
 
+  <!-- ── Segunda pantalla en stand-by (no eliminar, no mostrar) ── -->
   <main id="trackingView" class="tracking-shell hidden">
-    <section class="tracking-map"><div id="trackMap"></div></section>
+    <section class="tracking-map"><div id="trackMapLegacy"></div></section>
     <section class="tracking-card" aria-live="polite">
       <p class="eyebrow">Seguimiento privado</p><h1 id="trackTitle">Tu viaje</h1><p class="sub">Cuando el conductor acepte el viaje, el mapa mostrará su ubicación y actualizará el recorrido automáticamente.</p>
       <div id="trackStatus" class="status-row waiting"><strong>Consultando viaje…</strong><span>●</span></div>
@@ -108,15 +163,34 @@
     (() => {
       const API='https://livre-cloud-production.up.railway.app';
       const $=id=>document.getElementById(id);
-      const statusLabels={pending:'Pedido recibido',searching:'Buscando conductor',scheduled:'Viaje programado',assigned:'Conductor asignado',arriving:'El conductor está en camino',in_progress:'Viaje en curso',conflict:'Estamos revisando el viaje',lost:'No pudimos ubicar el viaje',completed:'Viaje finalizado',cancelled:'Viaje cancelado'};
+      const statusLabels={
+        pending:'Pedido recibido',
+        searching:'Buscando conductor',
+        scheduled:'Viaje programado',
+        assigned:'Conductor asignado',
+        arriving:'El conductor está en camino',
+        waiting:'El conductor está afuera',
+        in_progress:'Viaje en curso',
+        conflict:'Estamos revisando el viaje',
+        lost:'No pudimos ubicar el viaje',
+        completed:'Viaje finalizado',
+        cancelled:'Viaje cancelado'
+      };
       let map=null,trackMap=null,trackMarker=null,trackRouteLine=null,trackRouteStops=[],trackRoutePhase='',currentTrackingToken='',trackingPolling=null,passengerChatPolling=null,currentQuote=null,quoteRequestSequence=0,routePreviewRequest=0,routePreviewLine=null,routePreviewMarkers=[];
       const FIREBASE_CONFIG={apiKey:'AIzaSyDJfeL1Ns6bn-tNwkGMGBEw'+'BrNVGRZ5uVQ',authDomain:'livre-pasajeros-668b4.firebaseapp.com',projectId:'livre-pasajeros-668b4',storageBucket:'livre-pasajeros-668b4.firebasestorage.app',messagingSenderId:'665864786520',appId:'1:665864786520:web:a043381a03aa80e399702d',measurementId:'G-6PE72B2SE2'};
       const firebaseApp=firebase.initializeApp(FIREBASE_CONFIG),firebaseAuth=firebaseApp.auth();
       const firebaseProviders={google:new firebase.auth.GoogleAuthProvider(),apple:new firebase.auth.OAuthProvider('apple.com')};
       const APP_STATE_VERSION='passenger-state-v2';
       const PASSENGER_SESSION_KEY='livre.passenger.session.v1';
+      const ACTIVE_TRIP_KEY='livre.passenger.active_trip.v1';
       let passengerSession=JSON.parse(localStorage.getItem(PASSENGER_SESSION_KEY)||'null');
       document.documentElement.dataset.livrePassengerState=APP_STATE_VERSION;
+
+      // ── Persistencia de viaje activo ──
+      function saveActiveTrip(token,origin,destination){try{localStorage.setItem(ACTIVE_TRIP_KEY,JSON.stringify({token,origin:origin||'',destination:destination||'',ts:Date.now()}))}catch(_){}}
+      function clearActiveTrip(){try{localStorage.removeItem(ACTIVE_TRIP_KEY)}catch(_){}}
+      function loadActiveTrip(){try{return JSON.parse(localStorage.getItem(ACTIVE_TRIP_KEY)||'null')}catch{return null}}
+
       const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
       function renderAccount(){const bar=$('accountBar');if(passengerSession?.token){bar.innerHTML='<button class="account-trigger" id="logoutPassenger" type="button">'+escapeHtml(passengerSession.user?.name||passengerSession.user?.email||'Mi cuenta')+' · Salir</button>';return}bar.innerHTML='<button class="account-trigger" id="openAccountModal" type="button">Ingresar</button>';}
       function closeAccountModal(){$('accountModal').classList.add('hidden');$('accountError').textContent=''}
@@ -140,31 +214,278 @@
       async function refreshQuote(){const origin=$('origin').value.trim(),destination=$('destination').value.trim();currentQuote=null;$('fare').dataset.value='';renderServiceOptions();if(origin.length<3||destination.length<3)return;const sequence=++quoteRequestSequence;$('routeStatus').textContent='Buscando servicios…';try{const response=await fetch(API+'/mobility/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin,destination})});const data=await response.json();if(sequence!==quoteRequestSequence)return;if(!response.ok)throw Error(data.detail||'No pudimos calcular los servicios');currentQuote={...data,origin,destination,selected_service_type_id:data.service_type_id};renderServiceOptions(data.options);$('fare').dataset.value=String(data.fare)}catch(error){if(sequence!==quoteRequestSequence)return;renderServiceOptions();showRequestError(error.message)}}
       ['blur'].forEach(eventName=>{['origin','destination'].forEach(id=>$(id).addEventListener(eventName,()=>{refreshQuote();previewRoute()}))});
       function setButton(button,label,disabled){button.disabled=disabled;button.textContent=label}
-      function renderStatus(status){const node=$('trackStatus');node.className='status-row '+(['cancelled','lost','conflict'].includes(status)?'cancelled':(['pending','searching','scheduled'].includes(status)?'waiting':''));node.innerHTML='<strong>'+escapeHtml(statusLabels[status]||'Estado no disponible')+'</strong><span>●</span>';const cancel=$('cancelTrip');const locked=['assigned','arriving','in_progress','completed','cancelled'].includes(status);setButton(cancel,status==='cancelled'?'Viaje cancelado':'Cancelar viaje',locked);cancel.title=locked?'El conductor ya tomó el viaje o el viaje terminó':'Podés cancelar antes de que un conductor acepte el viaje';}
-      function renderReassignmentNotice(trip){const node=$('trackNotice');if(!trip.driver_reassignment_pending){if(node.dataset.reassignment==='true'){node.classList.add('hidden');node.dataset.reassignment='false';}return}node.textContent='El conductor cambió. Estamos buscando otro conductor para tu viaje.';node.classList.remove('hidden');node.dataset.reassignment='true';}
+
+      // ── Render de estado: segunda pantalla (stand-by) ──
+      function renderStatus(status){const node=$('trackStatus');node.className='status-row '+(['cancelled','lost','conflict'].includes(status)?'cancelled':(['pending','searching','scheduled'].includes(status)?'waiting':''));node.innerHTML='<strong>'+escapeHtml(statusLabels[status]||'Estado no disponible')+'</strong><span>●</span>';const cancel=$('cancelTrip');const locked=['assigned','arriving','waiting','in_progress','completed','cancelled'].includes(status);setButton(cancel,status==='cancelled'?'Viaje cancelado':'Cancelar viaje',locked);}
+
+      // ── Render de estado: panel inline ──
+      function renderInlineStatus(status){
+        const node=$('inlineTrackStatus');
+        const isArrived=status==='waiting';
+        const isNeg=['cancelled','lost','conflict'].includes(status);
+        const isSearch=['pending','searching','scheduled'].includes(status);
+        node.className='status-row '+(isNeg?'cancelled':isSearch?'waiting':isArrived?'arrived':'');
+        node.innerHTML='<strong>'+escapeHtml(statusLabels[status]||'Estado no disponible')+'</strong><span>●</span>';
+        const cancel=$('inlineCancelTrip');
+        const locked=['assigned','arriving','waiting','in_progress','completed','cancelled'].includes(status);
+        setButton(cancel,status==='cancelled'?'Viaje cancelado':'Cancelar viaje',locked);
+        // Aviso especial cuando el conductor está afuera
+        if(isArrived){
+          const n=$('inlineTrackNotice');
+          n.textContent='🚗 El conductor está afuera, esperándote.';
+          n.classList.remove('hidden');
+          n.style.cssText='background:#e8f7ef;color:#087f83;border:1px solid #b2dfd3';
+        }
+      }
+
+      function renderReassignmentNotice(trip){
+        const node=$('trackNotice');
+        const inlineNode=$('inlineTrackNotice');
+        if(!trip.driver_reassignment_pending){
+          if(node.dataset.reassignment==='true'){node.classList.add('hidden');node.dataset.reassignment='false';}
+          if(inlineNode.dataset.reassignment==='true'){inlineNode.classList.add('hidden');inlineNode.dataset.reassignment='false';}
+          return;
+        }
+        const msg='El conductor cambió. Estamos buscando otro conductor para tu viaje.';
+        node.textContent=msg;node.classList.remove('hidden');node.dataset.reassignment='true';
+        inlineNode.textContent=msg;inlineNode.classList.remove('hidden');inlineNode.dataset.reassignment='true';
+      }
+
+      // ── updateDriver: segunda pantalla (stand-by) ──
       function updateDriver(trip){const name=trip.driver_name;if(!name){$('driverCard').classList.add('hidden');return}$('driverCard').classList.remove('hidden');$('driverName').textContent=name;$('vehicleInfo').textContent=[trip.vehicle_model,trip.vehicle_color,trip.plate].filter(Boolean).join(' · ')||'Vehículo Livre asignado'}
-      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];if(!trackMarker)trackMarker=L.marker(point,{icon:trackRoutePhase==='trip'?L.divIcon({html:'🚗',className:'',iconSize:[24,24],iconAnchor:[12,12]}):L.icon({iconUrl:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41]}),title:'Vehículo Livre'}).addTo(trackMap);else trackMarker.setLatLng(point);if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;$('trackUpdated').textContent=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min'}else $('trackUpdated').textContent=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor'}
+
+      // ── updateDriver: panel inline ──
+      function updateInlineDriver(trip){
+        const name=trip.driver_name;
+        if(!name){$('inlineDriverCard').classList.add('hidden');return}
+        $('inlineDriverCard').classList.remove('hidden');
+        $('inlineDriverName').textContent=name;
+        $('inlineVehicleInfo').textContent=[trip.vehicle_model,trip.vehicle_color,trip.plate].filter(Boolean).join(' · ')||'Vehículo Livre asignado';
+      }
+
+      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];if(!trackMarker)trackMarker=L.marker(point,{icon:trackRoutePhase==='trip'?L.divIcon({html:'🚗',className:'',iconSize:[24,24],iconAnchor:[12,12]}):L.icon({iconUrl:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41]}),title:'Vehículo Livre'}).addTo(trackMap);else trackMarker.setLatLng(point);if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
+
       async function updateTrackingRoute(token,trip,signal){const phase=trip.status==='in_progress'?'trip':'pickup';if(!['assigned','arriving','in_progress'].includes(trip.status))return;if(phase==='trip'&&trackRoutePhase===phase&&trackRouteLine)return;const phaseChanged=trackRoutePhase!==phase;const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/route?phase='+phase,{signal});if(!response.ok)return;const route=await response.json();const points=(route.coordinates||[]).map(([lng,lat])=>[lat,lng]).filter(point=>point.every(Number.isFinite));if(points.length<2)return;trackRouteLine?.remove();trackRouteStops.forEach(marker=>marker.remove());trackRouteStops=[];trackRouteLine=L.polyline(points,{color:phase==='pickup'?'#087f83':'#E8003D',weight:6,opacity:.8}).addTo(trackMap);const originIcon=L.divIcon({html:'🏁',className:'',iconSize:[28,28],iconAnchor:[14,14]}),destIcon=L.divIcon({html:'📍',className:'',iconSize:[28,28],iconAnchor:[14,14]});trackRouteStops=[L.marker(points[0],{icon:originIcon}).addTo(trackMap),L.marker(points[points.length-1],{icon:destIcon}).addTo(trackMap)];if(phase==='trip'&&trackMarker){trackMarker.setIcon(L.divIcon({html:'🚗',className:'',iconSize:[24,24],iconAnchor:[12,12]}))};trackRoutePhase=phase;if(phaseChanged)trackMap.fitBounds(trackRouteLine.getBounds(),{padding:[28,28],maxZoom:16})}
-      async function fetchFresh(url,options={}){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000),externalSignal=options.signal,abort=()=>controller.abort();externalSignal?.addEventListener('abort',abort,{once:true});try{return await fetch(url+ (url.includes('?')?'&':'?') +'_='+Date.now(),{...options,cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout);externalSignal?.removeEventListener('abort',abort)}}
-      function resetTrackingView(message=''){trackingPolling?.stop();passengerChatPolling?.stop();trackMap?.remove();trackMap=null;trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';currentTrackingToken='';history.replaceState({},'',location.pathname);$('trackingView').classList.add('hidden');$('requestView').classList.remove('hidden');$('trackNotice').classList.add('hidden');$('trackNotice').textContent='';$('driverCard').classList.add('hidden');$('passengerMessages').innerHTML='';$('origin').value='';$('destination').value='';$('fare').dataset.value='';currentQuote=null;renderServiceOptions();if(message)showRequestError(message);setTimeout(()=>{map.invalidateSize();$('origin')?.focus()},100)}
-      async function refreshTracking(token,signal){const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token),{signal});const trip=await response.json();if(!response.ok)throw Error(trip.detail||'No encontramos este seguimiento');renderStatus(trip.status);renderReassignmentNotice(trip);if(['completed','cancelled','lost'].includes(trip.status)){resetTrackingView(trip.status==='completed'?'El viaje anterior ya finalizó. Podés pedir uno nuevo.':'El viaje anterior ya no está activo. Podés pedir uno nuevo.');return}$('trackOrigin').textContent=trip.origin||'—';$('trackDestination').textContent=trip.destination||'—';$('trackTitle').textContent=trip.driver_name?'Viaje con '+trip.driver_name:'Tu viaje';updateDriver(trip);updateLocation(trip);await updateTrackingRoute(token,trip,signal)}
+
+      async function fetchFresh(url,options={}){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000),externalSignal=options.signal,abort=()=>controller.abort();externalSignal?.addEventListener('abort',abort,{once:true});try{return await fetch(url+(url.includes('?')?'&':'?')+'_='+Date.now(),{...options,cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout);externalSignal?.removeEventListener('abort',abort)}}
+
+      function resetTrackingView(message=''){
+        trackingPolling?.stop();passengerChatPolling?.stop();
+        trackMap?.remove();trackMap=null;trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';currentTrackingToken='';
+        clearActiveTrip();
+        // Ocultar panel inline, mostrar formulario
+        $('requestForm').classList.remove('trip-active');
+        $('tripStatusPanel').classList.remove('active');
+        $('map').classList.remove('trip-active');
+        $('trackMap').classList.remove('active');
+        $('inlineTrackNotice').classList.add('hidden');
+        $('inlineTrackNotice').style.cssText='';
+        $('inlineDriverCard').classList.add('hidden');
+        $('inlineMessages').innerHTML='';
+        // Limpiar también la segunda pantalla (stand-by)
+        history.replaceState({},'',location.pathname);
+        $('trackingView').classList.add('hidden');
+        $('requestView').classList.remove('hidden');
+        $('trackNotice').classList.add('hidden');$('trackNotice').textContent='';
+        $('driverCard').classList.add('hidden');$('passengerMessages').innerHTML='';
+        // Reset formulario
+        $('origin').value='';$('destination').value='';$('fare').dataset.value='';
+        currentQuote=null;renderServiceOptions();
+        if(message)showRequestError(message);
+        setTimeout(()=>{map.invalidateSize();$('origin')?.focus()},100);
+      }
+
+      async function refreshTracking(token,signal){
+        const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token),{signal});
+        const trip=await response.json();
+        if(!response.ok)throw Error(trip.detail||'No encontramos este seguimiento');
+        renderStatus(trip.status);
+        renderInlineStatus(trip.status);
+        renderReassignmentNotice(trip);
+        if(['completed','cancelled','lost'].includes(trip.status)){
+          clearActiveTrip();
+          resetTrackingView(trip.status==='completed'?'El viaje anterior ya finalizó. Podés pedir uno nuevo.':'El viaje anterior ya no está activo. Podés pedir uno nuevo.');
+          return;
+        }
+        // Actualizar direcciones
+        $('trackOrigin').textContent=trip.origin||'—';
+        $('trackDestination').textContent=trip.destination||'—';
+        $('trackTitle').textContent=trip.driver_name?'Viaje con '+trip.driver_name:'Tu viaje';
+        $('inlineTrackOrigin').textContent=trip.origin||'—';
+        $('inlineTrackDestination').textContent=trip.destination||'—';
+        $('inlineTripTitle').textContent=trip.driver_name?'Viaje con '+trip.driver_name:'Tu viaje';
+        updateDriver(trip);
+        updateInlineDriver(trip);
+        updateLocation(trip);
+        await updateTrackingRoute(token,trip,signal);
+      }
+
       function messageId(){return crypto.randomUUID?.()||Date.now()+'-'+Math.random().toString(36).slice(2)}
       async function sendMessageWithRetry(url,options){let last;for(let i=0;i<2;i++){try{const r=await fetch(url,options);if(r.ok||(r.status>=400&&r.status<500))return r;last=Error('HTTP '+r.status)}catch(e){last=e}if(i===0)await new Promise(resolve=>setTimeout(resolve,350))}throw last||Error('No se pudo enviar el mensaje')}
-      function renderMessages(items){$('passengerMessages').innerHTML=items.map(message=>'<div class="message '+(message.sender_role==='passenger'?'mine':'')+'"><b>'+ (message.sender_role==='passenger'?'Vos':'Livre')+'</b>'+escapeHtml(message.body)+'</div>').join('')||'<div class="notice">Todavía no hay mensajes.</div>'}
-      async function refreshPassengerMessages(token,signal){const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/messages',{signal});if(response.ok)renderMessages(await response.json())}
-      function startTrackingPolling(){if(!currentTrackingToken)return;trackingPolling?.stop();passengerChatPolling?.stop();const token=currentTrackingToken;trackingPolling=LivreTrackingPolling.create({intervalMs:10000});trackingPolling.start(signal=>refreshTracking(token,signal),null,error=>{$('trackNotice').textContent=error.name==='AbortError'?'Conexión demorada. Reintentando…':error.message;$('trackNotice').classList.remove('hidden')});passengerChatPolling=LivreTrackingPolling.create({intervalMs:5000});passengerChatPolling.start(signal=>refreshPassengerMessages(token,signal),null,()=>{})}
-      function showTracking(token){currentTrackingToken=token;$('requestView').classList.add('hidden');$('trackingView').classList.remove('hidden');$('passengerMessages').innerHTML='';$('trackNotice').classList.add('hidden');$('driverCard').classList.add('hidden');trackMap?.remove();trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';trackMap=baseMap('trackMap');startTrackingPolling()}
+      function renderMessages(items){$('passengerMessages').innerHTML=items.map(message=>'<div class="message '+(message.sender_role==='passenger'?'mine':'')+'"><b>'+(message.sender_role==='passenger'?'Vos':'Livre')+'</b>'+escapeHtml(message.body)+'</div>').join('')||'<div class="notice">Todavía no hay mensajes.</div>'}
+      function renderInlineMessages(items){$('inlineMessages').innerHTML=items.map(m=>'<div class="message '+(m.sender_role==='passenger'?'mine':'')+'"><b>'+(m.sender_role==='passenger'?'Vos':'Livre')+'</b>'+escapeHtml(m.body)+'</div>').join('')||'<div class="notice">Todavía no hay mensajes.</div>'}
+      async function refreshPassengerMessages(token,signal){const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/messages',{signal});if(response.ok){const items=await response.json();renderMessages(items);renderInlineMessages(items);}}
+
+      function startTrackingPolling(){
+        if(!currentTrackingToken)return;
+        trackingPolling?.stop();passengerChatPolling?.stop();
+        const token=currentTrackingToken;
+        trackingPolling=LivreTrackingPolling.create({intervalMs:10000});
+        trackingPolling.start(signal=>refreshTracking(token,signal),null,error=>{
+          const msg=error.name==='AbortError'?'Conexión demorada. Reintentando…':error.message;
+          $('trackNotice').textContent=msg;$('trackNotice').classList.remove('hidden');
+          $('inlineTrackNotice').textContent=msg;$('inlineTrackNotice').classList.remove('hidden');
+        });
+        passengerChatPolling=LivreTrackingPolling.create({intervalMs:5000});
+        passengerChatPolling.start(signal=>refreshPassengerMessages(token,signal),null,()=>{});
+      }
+
+      // ── showTracking: mantiene la misma pantalla ──
+      function showTracking(token,origin,destination){
+        currentTrackingToken=token;
+        // Preservar origin/destination de sesión previa si no vienen como parámetros
+        const existing=loadActiveTrip();
+        const resolvedOrigin=origin||existing?.origin||'';
+        const resolvedDestination=destination||existing?.destination||'';
+        saveActiveTrip(token,resolvedOrigin,resolvedDestination);
+        // Cambiar formulario → panel de seguimiento
+        $('requestForm').classList.add('trip-active');
+        $('tripStatusPanel').classList.add('active');
+        // Cambiar mapa preview → mapa de tracking (mismo panel)
+        $('map').classList.add('trip-active');
+        $('trackMap').classList.add('active');
+        // Resetear UI inline
+        $('inlineMessages').innerHTML='';
+        $('inlineTrackNotice').classList.add('hidden');
+        $('inlineTrackNotice').style.cssText='';
+        $('inlineDriverCard').classList.add('hidden');
+        $('inlineTripTitle').textContent='Tu viaje';
+        if(resolvedOrigin)$('inlineTrackOrigin').textContent=resolvedOrigin;
+        if(resolvedDestination)$('inlineTrackDestination').textContent=resolvedDestination;
+        // Resetear también elementos de segunda pantalla (stand-by)
+        $('trackingView').classList.add('hidden');
+        $('passengerMessages').innerHTML='';
+        $('trackNotice').classList.add('hidden');
+        $('driverCard').classList.add('hidden');
+        // Inicializar mapa de tracking (el div ya es visible)
+        trackMap?.remove();trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';
+        trackMap=baseMap('trackMap');
+        startTrackingPolling();
+      }
+
       function refreshAfterResume(){if(document.visibilityState==='hidden'||!currentTrackingToken)return;trackingPolling?.refresh();passengerChatPolling?.refresh()}
       ['pageshow','focus','online'].forEach(eventName=>window.addEventListener(eventName,refreshAfterResume));
       document.addEventListener('visibilitychange',refreshAfterResume);
+
       document.addEventListener('submit',async event=>{if(event.target.id!=='passengerAuthForm')return;event.preventDefault();const email=$('authEmail').value.trim(),password=$('authPassword').value;const register=event.target.dataset.mode==='register';const name=register?window.prompt('¿Cómo te llamás?','Pasajero'):null;if(register&&!name)return;const endpoint=register?'/auth/passenger/register':'/auth/passenger/login';try{const response=await fetch(API+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(register?{email,password,name}:{email,password})});const data=await response.json();if(!response.ok)throw Error(data.detail||'No se pudo iniciar sesión');passengerSession={token:data.token,user:data.user};localStorage.setItem(PASSENGER_SESSION_KEY,JSON.stringify(passengerSession));renderAccount();closeAccountModal()}catch(error){$('accountError').textContent=error.message}});
+
       document.addEventListener('click',event=>{const firebaseButton=event.target.closest('[data-firebase-provider]');if(firebaseButton){firebaseLogin(firebaseButton.dataset.firebaseProvider);return}if(event.target.id==='openAccountModal'){$('accountModal').classList.remove('hidden');setTimeout(()=>$('authEmail')?.focus(),50);return}if(event.target.id==='closeAccountModal'||event.target.id==='accountModal'){$('accountModal').classList.add('hidden');return}if(event.target.id==='emailLinkPassenger'){sendEmailLink();return}if(event.target.id==='registerPassenger'){const form=$('passengerAuthForm');form.dataset.mode='register';event.target.textContent='Crear cuenta · completá nombre';$('authPassword').autocomplete='new-password';return}if(event.target.id==='logoutPassenger'){firebaseAuth.signOut().catch(()=>{});passengerSession=null;localStorage.removeItem(PASSENGER_SESSION_KEY);resetTrackingView();renderAccount()}});
-      async function submitTripRequest(){const origin=$('origin').value.trim(),destination=$('destination').value.trim();const fare=Number(currentQuote?.fare),serviceTypeId=Number(currentQuote?.selected_service_type_id||currentQuote?.service_type_id);if(!Number.isFinite(fare)||fare<=0||!Number.isFinite(serviceTypeId)){showRequestError('Elegí Livre Ahorro o Livre Premium para continuar.');return}setButton($('requestButton'),serviceTypeId===2?'Creando solicitud…':'Enviando solicitud…',true);try{const response=await fetch(API+'/mobility/requests',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({origin,destination,passenger:'Pasajero web',whatsapp_user:'web',fare,service_type_id:serviceTypeId,activity_type:'real',payment_method:'cash'})});const data=await response.json();if(!response.ok)throw Error(data.detail||'No se pudo crear la solicitud');if(serviceTypeId===2){showMercadoPagoButton(data.trip_id,data.tracking_token)}else{history.replaceState({},'',`?token=${encodeURIComponent(data.tracking_token)}`);showTracking(data.tracking_token)}}catch(error){showRequestError(error.message)}finally{setButton($('requestButton'),serviceTypeId===2?'Abonar con Mercado Pago':'Solicitar viaje',false)}}function showMercadoPagoButton(tripId,trackingToken){$('requestView').classList.add('hidden');$('trackingView').classList.remove('hidden');$('trackStatus').innerHTML='<strong>Solicitud creada</strong><span>●</span>';$('trackOrigin').textContent=$('origin').value;$('trackDestination').textContent=$('destination').value;$('trackTitle').textContent='Tu viaje - Pago pendiente';$('trackNotice').textContent='Falta abonar con Mercado Pago para completar la solicitud.';$('trackNotice').classList.remove('hidden');currentTrackingToken=trackingToken;const mercadoBtn=document.createElement('button');mercadoBtn.className='btn danger';mercadoBtn.textContent='Abonar con Mercado Pago';mercadoBtn.style.marginTop='1rem';mercadoBtn.addEventListener('click',async()=>{setButton(mercadoBtn,'Abriendo Mercado Pago…',true);try{const paymentResponse=await fetch(API+'/payments/passenger/create',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({origin:$('origin').value,destination:$('destination').value,service_type_id:2})});const payment=await paymentResponse.json();if(!paymentResponse.ok)throw Error(payment.detail||'No pudimos generar el pago');if(!payment.payment_url)throw Error('Mercado Pago no devolvió un link válido');window.location.assign(payment.payment_url)}catch(error){$('trackNotice').textContent=error.message;setButton(mercadoBtn,'Abonar con Mercado Pago',false)}});const actions=$('trackingView').querySelector('.tracking-actions')||document.createElement('div');actions.className='tracking-actions';actions.innerHTML='';actions.appendChild(mercadoBtn);$('trackingView').querySelector('.tracking-actions')?.replaceWith(actions)||$('trackingView').appendChild(actions)}$('requestForm').addEventListener('submit',async event=>{event.preventDefault();$('requestError').classList.add('hidden');const origin=$('origin').value.trim(),destination=$('destination').value.trim();if(!origin||!destination){showRequestError('Revisá origen y destino antes de continuar.');return}if(!requirePassengerLogin())return;if(!currentQuote||currentQuote.origin!==origin||currentQuote.destination!==destination){await refreshQuote()}await submitTripRequest()});
+
+      // ── Ahorro: botón de Mercado Pago inline ──
+      function showMercadoPagoButton(tripId,trackingToken){
+        const origin=$('origin').value.trim();
+        const destination=$('destination').value.trim();
+        showTracking(trackingToken,origin,destination);
+        $('inlineTrackStatus').innerHTML='<strong>Solicitud creada · Pago pendiente</strong><span>●</span>';
+        $('inlineTrackStatus').className='status-row waiting';
+        $('inlineTrackNotice').textContent='Completá el pago con Mercado Pago para confirmar el viaje.';
+        $('inlineTrackNotice').classList.remove('hidden');
+        // Remover botón previo si existe
+        $('mpPayBtn')?.remove();
+        const mpBtn=document.createElement('button');
+        mpBtn.id='mpPayBtn';mpBtn.className='btn';mpBtn.textContent='Abonar con Mercado Pago';mpBtn.style.cssText='margin-top:10px;width:100%';
+        mpBtn.addEventListener('click',async()=>{
+          setButton(mpBtn,'Abriendo Mercado Pago…',true);
+          try{
+            const paymentResponse=await fetch(API+'/payments/passenger/create',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({origin,destination,service_type_id:2})});
+            const payment=await paymentResponse.json();
+            if(!paymentResponse.ok)throw Error(payment.detail||'No pudimos generar el pago');
+            if(!payment.payment_url)throw Error('Mercado Pago no devolvió un link válido');
+            window.location.assign(payment.payment_url);
+          }catch(error){
+            $('inlineTrackNotice').textContent=error.message;
+            setButton(mpBtn,'Abonar con Mercado Pago',false);
+          }
+        });
+        // Insertar antes de los botones de acción
+        const actions=$('tripStatusPanel').querySelector('.inline-actions');
+        actions.before(mpBtn);
+      }
+
+      async function submitTripRequest(){
+        const origin=$('origin').value.trim(),destination=$('destination').value.trim();
+        const fare=Number(currentQuote?.fare),serviceTypeId=Number(currentQuote?.selected_service_type_id||currentQuote?.service_type_id);
+        if(!Number.isFinite(fare)||fare<=0||!Number.isFinite(serviceTypeId)){showRequestError('Elegí Livre Ahorro o Livre Premium para continuar.');return}
+        setButton($('requestButton'),serviceTypeId===2?'Creando solicitud…':'Enviando solicitud…',true);
+        try{
+          const response=await fetch(API+'/mobility/requests',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({origin,destination,passenger:'Pasajero web',whatsapp_user:'web',fare,service_type_id:serviceTypeId,activity_type:'real',payment_method:'cash'})});
+          const data=await response.json();
+          if(!response.ok)throw Error(data.detail||'No se pudo crear la solicitud');
+          if(serviceTypeId===2){
+            showMercadoPagoButton(data.trip_id,data.tracking_token);
+          }else{
+            history.replaceState({},'',`?token=${encodeURIComponent(data.tracking_token)}`);
+            showTracking(data.tracking_token,origin,destination);
+          }
+        }catch(error){showRequestError(error.message)}
+        finally{setButton($('requestButton'),serviceTypeId===2?'Abonar con Mercado Pago':'Solicitar viaje',false)}
+      }
+
+      $('requestForm').addEventListener('submit',async event=>{event.preventDefault();$('requestError').classList.add('hidden');const origin=$('origin').value.trim(),destination=$('destination').value.trim();if(!origin||!destination){showRequestError('Revisá origen y destino antes de continuar.');return}if(!requirePassengerLogin())return;if(!currentQuote||currentQuote.origin!==origin||currentQuote.destination!==destination){await refreshQuote()}await submitTripRequest()});
+
+      // ── Botones de la segunda pantalla (stand-by) ──
       $('newTrip').addEventListener('click',()=>resetTrackingView());
       $('cancelTrip').addEventListener('click',async()=>{if(!currentTrackingToken||$('cancelTrip').disabled)return;if(!window.confirm('¿Querés cancelar este viaje?'))return;setButton($('cancelTrip'),'Cancelando…',true);try{const response=await fetch(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store'});const data=await response.json();if(!response.ok)throw Error(data.detail||'No se pudo cancelar el viaje');renderStatus(data.status);$('trackNotice').textContent='Viaje cancelado.';$('trackNotice').classList.remove('hidden')}catch(error){$('trackNotice').textContent=error.message;$('trackNotice').classList.remove('hidden');setButton($('cancelTrip'),'Cancelar viaje',false)}});
       $('shareTrip').addEventListener('click',async()=>{const url=location.href;try{if(navigator.share)await navigator.share({title:'Seguimiento de mi viaje Livre',url});else{await navigator.clipboard.writeText(url);$('trackNotice').textContent='Link copiado para compartir.';$('trackNotice').classList.remove('hidden')}}catch(_){}});
       $('passengerMessageForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('passengerMessage'),body=input.value.trim();if(!body||!currentTrackingToken)return;input.disabled=true;try{const response=await sendMessageWithRetry(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body,client_message_id:messageId()})});if(!response.ok)throw Error('No se pudo enviar el mensaje');input.value='';await refreshPassengerMessages(currentTrackingToken)}catch(error){$('chatNotice').textContent=error.message}finally{input.disabled=false}});
-      const token=new URLSearchParams(location.search).get('token');if(token)showTracking(token);
+
+      // ── Botones del panel inline (pantalla activa) ──
+      $('inlineNewTrip').addEventListener('click',()=>resetTrackingView());
+      $('inlineCancelTrip').addEventListener('click',async()=>{
+        if(!currentTrackingToken||$('inlineCancelTrip').disabled)return;
+        if(!window.confirm('¿Querés cancelar este viaje?'))return;
+        setButton($('inlineCancelTrip'),'Cancelando…',true);
+        try{
+          const response=await fetch(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store'});
+          const data=await response.json();
+          if(!response.ok)throw Error(data.detail||'No se pudo cancelar el viaje');
+          renderInlineStatus(data.status);
+          clearActiveTrip();
+          $('inlineTrackNotice').textContent='Viaje cancelado.';
+          $('inlineTrackNotice').classList.remove('hidden');
+          $('inlineTrackNotice').style.cssText='';
+        }catch(error){
+          $('inlineTrackNotice').textContent=error.message;
+          $('inlineTrackNotice').classList.remove('hidden');
+          setButton($('inlineCancelTrip'),'Cancelar viaje',false);
+        }
+      });
+      $('inlineMessageForm').addEventListener('submit',async event=>{
+        event.preventDefault();
+        const input=$('inlineMessage'),body=input.value.trim();
+        if(!body||!currentTrackingToken)return;
+        input.disabled=true;
+        try{
+          const response=await sendMessageWithRetry(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body,client_message_id:messageId()})});
+          if(!response.ok)throw Error('No se pudo enviar el mensaje');
+          input.value='';
+          await refreshPassengerMessages(currentTrackingToken);
+        }catch(error){
+          $('inlineChatNotice').textContent=error.message;
+        }finally{input.disabled=false}
+      });
+
+      // ── Inicio: retomar viaje activo desde URL o localStorage ──
+      const urlToken=new URLSearchParams(location.search).get('token');
+      const savedTrip=loadActiveTrip();
+      if(urlToken){
+        showTracking(urlToken);
+      }else if(savedTrip?.token&&(Date.now()-(savedTrip.ts||0))<86400000){
+        // Retomar viaje guardado (máx 24 h)
+        showTracking(savedTrip.token,savedTrip.origin,savedTrip.destination);
+      }
+
+      // ── Exports para debugging ──
       window.$=$;window.submitTripRequest=submitTripRequest;window.refreshQuote=refreshQuote;window.showTracking=showTracking;window.resetTrackingView=resetTrackingView;window.currentQuote=currentQuote;window.passengerSession=passengerSession;window.renderServiceOptions=renderServiceOptions;
     })();
   </script>
