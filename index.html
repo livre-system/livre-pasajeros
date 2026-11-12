@@ -281,47 +281,95 @@
         $('inlineVehicleInfo').textContent=parts.length?parts.join(' · '):'Vehículo Livre';
       }
 
-      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];if(!trackMarker)trackMarker=L.marker(point,{icon:makeIcon(SVG_CAR,36,36,18,18),title:'Vehículo Livre'}).addTo(trackMap);else trackMarker.setLatLng(point);if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
+      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];_carHeading=getCarHeading(point);const carIcon=makeDynamicCarIcon(_carHeading);if(!trackMarker){trackMarker=L.marker(point,{icon:carIcon,title:'Vehículo Livre'}).addTo(trackMap);}else{trackMarker.setLatLng(point);trackMarker.setIcon(carIcon);}_prevCarPos=point;if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
 
       // ── Iconos SVG profesionales ──
-      const SVG_ORIGIN=`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#087f83" stroke="#fff" stroke-width="2.5"/><circle cx="14" cy="14" r="5" fill="#fff"/></svg>`;
-      const SVG_DEST=`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.33 14 22 14 22S28 23.33 28 14C28 6.27 21.73 0 14 0z" fill="#e8003d"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>`;
-      const SVG_CAR=`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#101820" stroke="#fff" stroke-width="2"/><path d="M9 20l2-5h14l2 5v3H9v-3zm3 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm12 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="#fff"/><path d="M11.5 20l1.5-4h10l1.5 4H11.5z" fill="#087f83"/></svg>`;
+      // Origen: círculo teal grande con punto central y sombra
+      const SVG_ORIGIN=`<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="17" fill="#087f83" stroke="#fff" stroke-width="3"/><circle cx="19" cy="19" r="6" fill="#fff"/><circle cx="19" cy="19" r="3" fill="#087f83"/></svg>`;
+      // Destino: pin rojo estilo PedidosYa, grande y con círculo blanco interior
+      const SVG_DEST=`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46"><filter id="ds"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000040"/></filter><path d="M18 0C8.06 0 0 8.06 0 18c0 12.44 18 28 18 28S36 30.44 36 18C36 8.06 27.94 0 18 0z" fill="#e8003d" filter="url(#ds)"/><circle cx="18" cy="18" r="8" fill="#fff"/><circle cx="18" cy="18" r="4" fill="#e8003d"/></svg>`;
+      // Auto: visto desde arriba, orientable, bien proporcionado
+      const SVG_CAR_TEMPLATE=`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#101820" stroke="#fff" stroke-width="2.5"/><g transform="translate(22,22) rotate({{ROT}})"><path d="M0,-12 L-7,4 L-5,4 L-5,8 L5,8 L5,4 L7,4 Z" fill="#fff" opacity="0.95"/><rect x="-7" y="-13" width="14" height="5" rx="2" fill="#087f83" opacity="0.9"/><rect x="-5" y="4" width="4" height="3" rx="1" fill="#555"/><rect x="1" y="4" width="4" height="3" rx="1" fill="#555"/><rect x="-6" y="-10" width="5" height="3" rx="1" fill="#101820" opacity="0.6"/><rect x="1" y="-10" width="5" height="3" rx="1" fill="#101820" opacity="0.6"/></g></svg>`;
+      let _carHeading=0;
+      function makeDynamicCarIcon(heading){const svg=SVG_CAR_TEMPLATE.replace('{{ROT}}',heading||0);return L.divIcon({html:svg,className:'',iconSize:[44,44],iconAnchor:[22,22]})}
       function makeIcon(svg,w,h,ax,ay){return L.divIcon({html:svg,className:'',iconSize:[w,h],iconAnchor:[ax,ay]})}
+      let _prevCarPos=null;
+      function getCarHeading(newPos){
+        if(!_prevCarPos)return _carHeading;
+        const dlat=newPos[0]-_prevCarPos[0],dlng=newPos[1]-_prevCarPos[1];
+        if(Math.abs(dlat)<0.00005&&Math.abs(dlng)<0.00005)return _carHeading;
+        const angle=Math.atan2(dlng,dlat)*180/Math.PI;
+        return angle;
+      }
 
+      // Línea secundaria origen→destino (gris, deshabilitada) — solo se guarda aquí
+      let _ghostLine=null,_ghostStops=[];
       async function updateTrackingRoute(token,trip,signal){
         const phase=trip.status==='in_progress'?'trip':'pickup';
         if(!['assigned','arriving','in_progress'].includes(trip.status))return;
         if(phase==='trip'&&trackRoutePhase===phase&&trackRouteLine)return;
         const phaseChanged=trackRoutePhase!==phase;
+
+        // Limpiar capas anteriores
+        trackRouteLine?.remove();
+        trackRouteStops.forEach(m=>m.remove());
+        trackRouteStops=[];
+        _ghostLine?.remove(); _ghostLine=null;
+        _ghostStops.forEach(m=>m.remove()); _ghostStops=[];
+
+        // Pedir ruta activa (conductor→pasajero en pickup, pasajero→destino en trip)
         const response=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/route?phase='+phase,{signal});
         if(!response.ok)return;
         const route=await response.json();
         const points=(route.coordinates||[]).map(([lng,lat])=>[lat,lng]).filter(p=>p.every(Number.isFinite));
         if(points.length<2)return;
-        trackRouteLine?.remove();
-        trackRouteStops.forEach(m=>m.remove());
-        trackRouteStops=[];
-        // Línea con sombra sutil: capa base oscura + capa de color
-        const baseColor=phase==='pickup'?'#055e61':'#9d1237';
-        const lineColor=phase==='pickup'?'#087f83':'#e8003d';
-        const shadow=L.polyline(points,{color:baseColor,weight:9,opacity:.18}).addTo(trackMap);
-        trackRouteLine=L.polyline(points,{color:lineColor,weight:4.5,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
-        trackRouteStops=[shadow,
-          L.marker(points[0],{icon:makeIcon(SVG_ORIGIN,28,28,14,14)}).addTo(trackMap),
-          L.marker(points[points.length-1],{icon:makeIcon(SVG_DEST,28,36,14,34)}).addTo(trackMap)
-        ];
-        // Actualizar ícono del vehículo si ya existe
-        if(trackMarker){trackMarker.setIcon(makeIcon(SVG_CAR,36,36,18,18))}
+
+        if(phase==='pickup'){
+          // ── Tramo activo: conductor → punto de recogida (teal, destacado) ──
+          const shadow=L.polyline(points,{color:'#055e61',weight:10,opacity:.15}).addTo(trackMap);
+          trackRouteLine=L.polyline(points,{color:'#087f83',weight:5,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+          // Marcador de llegada del auto (inicio del tramo = posición del conductor ya se muestra con trackMarker)
+          // Marcador de recogida (fin del tramo activo)
+          const pickupMarker=L.marker(points[points.length-1],{icon:makeIcon(SVG_ORIGIN,38,38,19,19),title:'Tu ubicación'}).addTo(trackMap);
+          trackRouteStops=[shadow,pickupMarker];
+
+          // ── Tramo secundario: punto de recogida → destino (gris, apagado) ──
+          // Pedirlo solo si tenemos destino como coordenadas; si no, trazar línea recta placeholder
+          try{
+            const tripResp=await fetchFresh(API+'/mobility/tracking/'+encodeURIComponent(token)+'/route?phase=trip',{signal});
+            if(tripResp.ok){
+              const tripRoute=await tripResp.json();
+              const ghostPts=(tripRoute.coordinates||[]).map(([lng,lat])=>[lat,lng]).filter(p=>p.every(Number.isFinite));
+              if(ghostPts.length>=2){
+                _ghostLine=L.polyline(ghostPts,{color:'#b0bec5',weight:4,opacity:.55,dashArray:'8 6',lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+                const destMarker=L.marker(ghostPts[ghostPts.length-1],{icon:makeIcon(SVG_DEST,36,46,18,43),title:'Tu destino'}).addTo(trackMap);
+                _ghostStops=[destMarker];
+              }
+            }
+          }catch(_){}// silencioso, el tramo secundario es solo visual
+
+        }else{
+          // ── Fase trip: una sola línea activa roja ──
+          const shadow=L.polyline(points,{color:'#9d1237',weight:10,opacity:.15}).addTo(trackMap);
+          trackRouteLine=L.polyline(points,{color:'#e8003d',weight:5,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+          const originMarker=L.marker(points[0],{icon:makeIcon(SVG_ORIGIN,38,38,19,19)}).addTo(trackMap);
+          const destMarker=L.marker(points[points.length-1],{icon:makeIcon(SVG_DEST,36,46,18,43)}).addTo(trackMap);
+          trackRouteStops=[shadow,originMarker,destMarker];
+        }
+
         trackRoutePhase=phase;
-        if(phaseChanged)trackMap.fitBounds(trackRouteLine.getBounds(),{padding:[36,36],maxZoom:16});
+        if(phaseChanged){
+          const bounds=trackRouteLine.getBounds();
+          if(_ghostLine)bounds.extend(_ghostLine.getBounds());
+          trackMap.fitBounds(bounds,{padding:[48,48],maxZoom:16});
+        }
       }
 
       async function fetchFresh(url,options={}){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000),externalSignal=options.signal,abort=()=>controller.abort();externalSignal?.addEventListener('abort',abort,{once:true});try{return await fetch(url+(url.includes('?')?'&':'?')+'_='+Date.now(),{...options,cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout);externalSignal?.removeEventListener('abort',abort)}}
 
       function resetTrackingView(message=''){
         trackingPolling?.stop();passengerChatPolling?.stop();
-        trackMap?.remove();trackMap=null;trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';currentTrackingToken='';
+        trackMap?.remove();trackMap=null;trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';currentTrackingToken='';_prevCarPos=null;_carHeading=0;_ghostLine=null;_ghostStops=[];
         clearActiveTrip();
         // Ocultar panel inline, mostrar formulario
         $('requestForm').classList.remove('trip-active');
@@ -418,7 +466,7 @@
         $('trackNotice').classList.add('hidden');
         $('driverCard').classList.add('hidden');
         // Inicializar mapa de tracking (el div ya es visible)
-        trackMap?.remove();trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';
+        trackMap?.remove();trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';_prevCarPos=null;_carHeading=0;_ghostLine=null;_ghostStops=[];
         trackMap=baseMap('trackMap');
         startTrackingPolling();
       }
