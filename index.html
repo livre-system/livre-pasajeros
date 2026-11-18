@@ -429,18 +429,21 @@
       .account-modal { padding: 12px }
       .account-modal-card { padding: 20px; border-radius: 20px }
 
-      .tracking-shell { min-height: calc(100dvh - 62px); height: auto; margin: 0; overflow: visible; display: flex; flex-direction: column; background: var(--bg) }
-      .tracking-map { position: relative; order: 1; inset: auto; width: 100%; height: 58dvh; min-height: 360px; background: var(--bg) }
+      .tracking-shell { min-height: calc(100dvh - 62px); height: calc(100dvh - 62px); margin: 0; overflow: hidden; display: block; background: var(--bg) }
+      .tracking-map { position: absolute; z-index: 1; inset: 0; height: auto; min-height: 0; background: var(--bg); touch-action: pan-x pan-y }
       .tracking-map #trackMapLegacy { height: 100%; min-height: 0 }
-      .tracking-card { position: relative; order: 2; left: auto; top: auto; bottom: auto; width: 100%; max-height: none; overflow: visible; padding: 18px 16px calc(24px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; box-shadow: var(--shadow-md) }
-      .tracking-card::before { content: ""; display: block; width: 40px; height: 4px; margin: -6px auto 14px; border-radius: 999px; background: var(--line) }
-      .tracking-card h1 { font-size: 24px }
-      .route-address { font-size: 12px }
+      .tracking-card { position: absolute; z-index: 10; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); width: auto; max-height: 46dvh; overflow: auto; padding: 14px; border-radius: 18px; box-shadow: var(--shadow-lg) }
+      .tracking-card::before { content: ""; display: block; width: 40px; height: 4px; margin: -4px auto 10px; border-radius: 999px; background: var(--line) }
+      .tracking-card h1 { font-size: 21px }
+      .tracking-card .sub { margin-bottom: 10px }
+      .tracking-card .route-list { margin: 10px 0 }
+      .tracking-card .chat { margin-top: 10px; padding-top: 10px }
+      .tracking-card .messages { max-height: 90px }
+      .tracking-card .driver-card { padding-top: 10px }
+      .tracking-card .updated { margin-top: 8px }
       .tracking-actions .btn, .inline-actions .btn { min-height: 46px }
-      .messages { max-height: 180px }
       .status-row { padding: 11px 12px }
       .updated { font-size: 10px }
-    }
 
     @media (max-width: 360px) {
       .header-meta { display: none }
