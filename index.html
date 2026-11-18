@@ -611,7 +611,7 @@
         node.className='status-row '+(isNeg?'cancelled':isSearch?'waiting':isArrived?'arrived':'');
         node.innerHTML='<strong>'+escapeHtml(statusLabels[status]||'Estado no disponible')+'</strong><span>●</span>';
         const cancel=$('inlineCancelTrip');
-        const locked=['completed','cancelled'].includes(status);
+        const locked=['assigned','arriving','waiting','in_progress','completed','cancelled'].includes(status);
         setButton(cancel,status==='cancelled'?'Viaje cancelado':'Cancelar viaje',locked);
         // Aviso especial cuando el conductor está afuera
         if(isArrived){
