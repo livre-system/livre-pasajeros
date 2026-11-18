@@ -501,7 +501,7 @@
       <!-- ── Panel de seguimiento inline (misma pantalla) ── -->
       <div id="tripStatusPanel" class="panel form-panel" aria-live="polite">
         <div class="panel-heading">
-          <div><h2 id="inlineTripTitle">Tu viaje</h2><p style="margin:5px 0 0;color:var(--muted);font-size:12px">Seguimiento en tiempo real</p></div>
+          <div><h2 id="inlineTripTitle">Tu viaje</h2><p style="margin:5px 0 0;color:var(--muted);font-size:12px">Seguimiento</p></div>
           <span class="step">EN CURSO</span>
         </div>
         <div id="inlineTrackStatus" class="status-row waiting"><strong>Consultando viaje…</strong><span>●</span></div>
@@ -510,7 +510,7 @@
           <div class="route-item"><span class="route-marker"></span><div><span class="route-label">Destino</span><span id="inlineTrackDestination" class="route-address">—</span></div></div>
         </div>
         <div id="inlineDriverCard" class="driver-card hidden"><div class="driver-avatar">L</div><div><strong id="inlineDriverName">Conductor asignado</strong><span id="inlineVehicleInfo">Vehículo pendiente</span></div></div>
-        <div class="updated" style="margin-top:14px"><span id="inlineTrackUpdated">Esperando ubicación</span><span>Actualización automática</span></div>
+        <div class="updated" style="margin-top:14px"><span id="inlineTrackUpdated"></span></div>
         <div id="inlineTrackNotice" class="notice hidden" role="status"></div>
         <div class="inline-actions">
           <button id="inlineCancelTrip" class="btn danger" type="button">Cancelar viaje</button>
@@ -657,7 +657,6 @@
         const firstName=raw.trim().split(/\s+/)[0];
         $('inlineDriverCard').classList.remove('hidden');
         $('inlineDriverName').textContent=firstName;
-        // Avatar: inicial del primer nombre
         $('inlineDriverCard').querySelector('.driver-avatar').textContent=firstName[0].toUpperCase();
         const parts=[trip.vehicle_model,trip.vehicle_color,trip.plate].filter(Boolean);
         $('inlineVehicleInfo').textContent=parts.length?parts.join(' · '):'Vehículo Livre';
