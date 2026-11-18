@@ -837,8 +837,7 @@
         if(resolvedOrigin)$('inlineTrackOrigin').textContent=resolvedOrigin;
         if(resolvedDestination)$('inlineTrackDestination').textContent=resolvedDestination;
         // Resetear también elementos de segunda pantalla (stand-by)
-        $('trackingView').classList.remove('hidden');
-        $('requestView').classList.add('hidden');
+        $('trackingView').classList.add('hidden');
         $('passengerMessages').innerHTML='';
         $('trackNotice').classList.add('hidden');
         $('driverCard').classList.add('hidden');
