@@ -186,7 +186,7 @@
       box-shadow: 0 4px 18px #e8003d18;
       background: var(--brand-lt);
     }
-    html[data-theme="dark"] .service-option.selected { background: var(--brand-lt) }
+    html[data-theme="dark"] .service-option.selected { background: #3a0d18; border-color: #ff5278; color: var(--ink) }
     .service-option span { display: grid; gap: 3px }
     .service-option strong { font-size: 13px; font-weight: 700 }
     .service-option small { color: var(--muted); font-size: 11px }
@@ -211,13 +211,15 @@
     .btn.secondary:hover { background: var(--bg); box-shadow: none }
     html[data-theme="dark"] .btn.secondary { color: var(--ink); border-color: var(--line) }
     html[data-theme="dark"] .btn.secondary:hover { background: var(--raised) }
+    html[data-theme="dark"] .btn:disabled { background: #3a4552; color: #9aa8b4; cursor: not-allowed; box-shadow: none }
     .form-actions { margin-top: 20px }
     .form-note { display: flex; gap: 8px; align-items: flex-start; color: var(--subtle); font-size: 11px; line-height: 1.5; margin: 13px 0 0 }
     .form-note svg { flex: none; color: var(--teal); margin-top: 1px }
 
     /* ── Alertas ── */
     .error, .notice { border-radius: 12px; padding: 11px 13px; font-size: 12px; line-height: 1.5; margin-top: 13px }
-    .error  { background: var(--brand-lt); color: #9a0030; border: 1px solid #ffc6d4 }
+    .error  { background: #fff0f3; color: #9a0030; border: 1px solid #ffc6d4 }
+    html[data-theme="dark"] .error { background: #3a0d18; color: #ff9db4; border-color: #ff9db4 }
     .notice { background: var(--bg); color: var(--muted); border: 1px solid var(--line) }
     html[data-theme="dark"] .notice { background: var(--raised); color: var(--ink-2) }
 
@@ -617,6 +619,7 @@
       async function previewRoute(){const origin=$('origin').value.trim(),destination=$('destination').value.trim(),request=++routePreviewRequest;routePreviewLine?.remove();routePreviewLine=null;routePreviewMarkers.forEach(marker=>marker.remove());routePreviewMarkers=[];if(origin.length<3||destination.length<3){$('routeStatus').textContent='Indicá origen y destino para verlo en el mapa';map.setView([-38.718,-62.266],14);return}$('routeStatus').textContent='Calculando recorrido…';try{const params=value=>new URLSearchParams({q:value+', Bahía Blanca, Buenos Aires, Argentina',format:'jsonv2',limit:'1',countrycodes:'ar'});const [originResponse,destinationResponse]=await Promise.all([fetch('https://nominatim.openstreetmap.org/search?'+params(origin),{headers:{Accept:'application/json'}}),fetch('https://nominatim.openstreetmap.org/search?'+params(destination),{headers:{Accept:'application/json'}})]);const [originData,destinationData]=await Promise.all([originResponse.json(),destinationResponse.json()]);if(request!==routePreviewRequest)return;const points=[[Number(originData[0]?.lat),Number(originData[0]?.lon)],[Number(destinationData[0]?.lat),Number(destinationData[0]?.lon)]];if(points.some(point=>point.some(value=>!Number.isFinite(value))))throw Error('No pudimos ubicar esas direcciones');const coordinates=points.map(([lat,lng])=>lng+','+lat).join(';');const routeResponse=await fetch('https://router.project-osrm.org/route/v1/driving/'+coordinates+'?overview=full&geometries=geojson',{headers:{Accept:'application/json'}});const routeData=await routeResponse.json();const geometry=routeData.routes?.[0]?.geometry?.coordinates;if(request!==routePreviewRequest||!Array.isArray(geometry)||geometry.length<2)throw Error('No pudimos calcular el recorrido');routePreviewLine=L.polyline(geometry.map(([lng,lat])=>[lat,lng]),{color:'#55b9a9',weight:5,opacity:.95}).addTo(map);routePreviewMarkers=[L.circleMarker(points[0],{radius:7,color:'#087f83',fillColor:'#fff',fillOpacity:1,weight:3}).addTo(map),L.circleMarker(points[1],{radius:7,color:'#e8003d',fillColor:'#fff',fillOpacity:1,weight:3}).addTo(map)];map.fitBounds(routePreviewLine.getBounds(),{padding:[24,24],maxZoom:16});$('routeStatus').textContent='Recorrido listo · '+(routeData.routes?.[0]?.distance?Math.round(routeData.routes[0].distance/100)/10+' km':'vista previa')}catch(error){if(request!==routePreviewRequest)return;$('routeStatus').textContent='No pudimos mostrar el recorrido todavía';}}
       map=baseMap('map');L.circle([-38.718,-62.266],{radius:3500,color:'#087f83',weight:2,fillColor:'#087f83',fillOpacity:.07}).addTo(map);
       function showRequestError(text){$('requestError').textContent=text;$('requestError').classList.remove('hidden')}
+      function errorText(response,data){return data?.detail||data?.message||`No se pudo completar la solicitud (${response.status})`}
       function requirePassengerLogin(){if(passengerSession?.token)return true;$('requestError').classList.add('hidden');$('accountModal').classList.remove('hidden');setTimeout(()=>$('authEmail')?.focus(),50);return false}
       function renderServiceOptions(options=[]){const node=$('serviceOptions');if(!options.length){node.innerHTML='<span class="service-empty">Completá origen y destino para elegir.</span>';return}const selectedId=Number(currentQuote?.selected_service_type_id||currentQuote?.service_type_id||0);node.innerHTML=options.map(item=>{const id=Number(item.service_type_id),paymentLabel=item.payment_label||(id===2?'Mercado Pago al solicitar':'Efectivo al conductor');return '<button type="button" class="service-option '+(id===selectedId?'selected':'')+'" data-service-id="'+id+'" data-fare="'+item.fare+'"><span><strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(item.payment_label?paymentLabel:(id===2?'La opción más económica · '+paymentLabel:'Viaje prioritario · '+paymentLabel))+'</small></span><b>'+new Intl.NumberFormat('es-AR',{style:'currency',currency:item.currency||'ARS',maximumFractionDigits:0}).format(item.fare)+'</b></button>'}).join('');node.querySelectorAll('.service-option').forEach(button=>button.addEventListener('click',()=>{node.querySelectorAll('.service-option').forEach(item=>item.classList.remove('selected'));button.classList.add('selected');$('fare').dataset.value=button.dataset.fare;currentQuote.selected_service_type_id=Number(button.dataset.serviceId);currentQuote.fare=Number(button.dataset.fare);setButton($('requestButton'),'Solicitar viaje',!canSubmitTrip())}));};
       async function refreshQuote(){const origin=$('origin').value.trim(),destination=$('destination').value.trim();currentQuote=null;$('fare').dataset.value='';renderServiceOptions();setButton($('requestButton'),'Solicitar viaje',true);if(origin.length<3||destination.length<3)return;const sequence=++quoteRequestSequence;$('routeStatus').textContent='Buscando servicios…';try{const response=await fetch(API+'/mobility/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin,destination})});const data=await response.json();if(sequence!==quoteRequestSequence)return;if(!response.ok)throw Error(data.detail||'No pudimos calcular los servicios');currentQuote={...data,origin,destination,selected_service_type_id:data.service_type_id};renderServiceOptions(data.options);$('fare').dataset.value=String(data.fare);setButton($('requestButton'),'Solicitar viaje',!canSubmitTrip())}catch(error){if(sequence!==quoteRequestSequence)return;renderServiceOptions();setButton($('requestButton'),'Solicitar viaje',true);showRequestError(error.message)}}
@@ -919,14 +922,14 @@
         try{
           const response=await fetch(API+'/mobility/requests',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({origin,destination,passenger:'Pasajero web',whatsapp_user:'web',fare,service_type_id:serviceTypeId,activity_type:'real',payment_method:'cash'})});
           const data=await response.json();
-          if(!response.ok)throw Error(data.detail||'No se pudo crear la solicitud');
+          if(!response.ok)throw Error(errorText(response,data));
           if(serviceTypeId===2){
             showMercadoPagoButton(data.trip_id,data.tracking_token);
           }else{
             history.replaceState({},'',`?token=${encodeURIComponent(data.tracking_token)}`);
             showTracking(data.tracking_token,origin,destination);
           }
-        }catch(error){showRequestError(error.message)}
+        }catch(error){showRequestError(errorText(response,data))}
         finally{setButton($('requestButton'),serviceTypeId===2?'Abonar con Mercado Pago':'Solicitar viaje',false)}
       }
 
