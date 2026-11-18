@@ -67,7 +67,7 @@
 
     /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box }
-    html, body { margin: 0; min-height: 100%; background: var(--bg) }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); touch-action: pan-x pan-y }
     body { overflow-x: hidden }
     button, input { font: inherit }
     .hidden  { display: none !important }
@@ -733,6 +733,9 @@
           if(_ghostLine)bounds.extend(_ghostLine.getBounds());
           trackMap.fitBounds(bounds,{padding:[48,48],maxZoom:16});
         }
+        if(!window._fullRouteRecenterTimer) window._fullRouteRecenterTimer=setInterval(()=>{
+          if(trackMap&&trackRouteLine){const b=trackRouteLine.getBounds();if(_ghostLine)b.extend(_ghostLine.getBounds());trackMap.fitBounds(b,{padding:[48,48],maxZoom:16,animate:false});}
+        },5000);
       }
 
       async function fetchFresh(url,options={}){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000),externalSignal=options.signal,abort=()=>controller.abort();externalSignal?.addEventListener('abort',abort,{once:true});try{return await fetch(url+(url.includes('?')?'&':'?')+'_='+Date.now(),{...options,cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout);externalSignal?.removeEventListener('abort',abort)}}
