@@ -414,6 +414,11 @@
       .intro h1 { font-size: 40px; margin-bottom: 8px }
       .intro p { font-size: 14px }
       .request-layout { display: flex; flex-direction: column; gap: 16px }
+      .request-layout:has(#tripStatusPanel.active) { gap: 0 }
+      .request-layout:has(#tripStatusPanel.active) .map-panel { order: 1; border-radius: 0; margin: -20px -16px 0; width: calc(100% + 32px); min-height: 58dvh; height: 58dvh }
+      .request-layout:has(#tripStatusPanel.active) #trackMap { height: 100%; min-height: 0 }
+      .request-layout:has(#tripStatusPanel.active) #tripStatusPanel { order: 2; border-radius: 18px 18px 0 0; margin: 0; padding-top: 20px }
+      .request-layout:has(#tripStatusPanel.active) .map-title, .request-layout:has(#tripStatusPanel.active) .map-legend { display: none }
       .form-panel { padding: 20px; border-radius: 18px }
       .panel-heading { margin-bottom: 16px }
       .panel-heading h2 { font-size: 19px }
