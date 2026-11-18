@@ -663,7 +663,14 @@
         $('inlineVehicleInfo').textContent=parts.length?parts.join(' · '):'Vehículo Livre';
       }
 
-      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];_carHeading=getCarHeading(point);const carIcon=makeDynamicCarIcon(_carHeading);if(!trackMarker){trackMarker=L.marker(point,{icon:carIcon,title:'Vehículo Livre'}).addTo(trackMap);}else{trackMarker.setLatLng(point);trackMarker.setIcon(carIcon);}_prevCarPos=point;if(trackRoutePhase==='pickup')trackMap.setView(point,16);const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
+      function fitFullTrackingRoute(){
+        if(!trackMap||!trackRouteLine)return;
+        const bounds=trackRouteLine.getBounds();
+        if(_ghostLine)bounds.extend(_ghostLine.getBounds());
+        trackMap.fitBounds(bounds,{padding:[48,48],maxZoom:16,animate:false});
+        if(!window._fullRouteRecenterTimer) window._fullRouteRecenterTimer=setInterval(()=>{if(trackMap&&trackRouteLine)fitFullTrackingRoute()},10000);
+      }
+      function updateLocation(trip){const terminal=['completed','cancelled'].includes(trip.status);if(terminal){$('trackUpdated').textContent=statusLabels[trip.status];return}if(Number.isFinite(trip.latitude)&&Number.isFinite(trip.longitude)){const point=[trip.latitude,trip.longitude];_carHeading=getCarHeading(point);const carIcon=makeDynamicCarIcon(_carHeading);if(!trackMarker){trackMarker=L.marker(point,{icon:carIcon,title:'Vehículo Livre'}).addTo(trackMap);}else{trackMarker.setLatLng(point);trackMarker.setIcon(carIcon);}_prevCarPos=point;const parsed=trip.location_updated_at?Date.parse(trip.location_updated_at):NaN;const age=Number.isFinite(parsed)?Math.max(0,Date.now()-parsed):null;const txt=age===null?'Ubicación recibida':age<60000?'Ubicación actualizada hace menos de un minuto':'Última ubicación hace '+Math.round(age/60000)+' min';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}else{const txt=['pending','searching'].includes(trip.status)?'Esperando asignación':'Esperando ubicación del conductor';$('trackUpdated').textContent=txt;$('inlineTrackUpdated').textContent=txt;}}
 
       // ── Iconos SVG profesionales ──
       // Origen: círculo teal grande con punto central y sombra
