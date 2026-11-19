@@ -937,7 +937,7 @@
 
       // ── Botones de la segunda pantalla (stand-by) ──
       $('newTrip').addEventListener('click',()=>resetTrackingView());
-      $('cancelTrip').addEventListener('click',async()=>{if(!currentTrackingToken||$('cancelTrip').disabled)return;if(!window.confirm('¿Querés cancelar este viaje?'))return;setButton($('cancelTrip'),'Cancelando…',true);try{const response=await fetch(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store'});const data=await response.json();if(!response.ok)throw Error(data.detail||'No se pudo cancelar el viaje');renderStatus(data.status);$('trackNotice').textContent='Viaje cancelado.';$('trackNotice').classList.remove('hidden')}catch(error){$('trackNotice').textContent=error.message;$('trackNotice').classList.remove('hidden');setButton($('cancelTrip'),'Cancelar viaje',false)}});
+      $('cancelTrip').addEventListener('click',async()=>{if(!currentTrackingToken||$('cancelTrip').disabled)return;if(!window.confirm('¿Querés cancelar este viaje?'))return;setButton($('cancelTrip'),'Cancelando…',true);try{const response=await fetch(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store'});const data=await response.json();if(!response.ok)throw Error(data.detail||'No se pudo cancelar el viaje');clearActiveTrip();resetTrackingView()}catch(error){$('trackNotice').textContent=error.message;$('trackNotice').classList.remove('hidden');setButton($('cancelTrip'),'Cancelar viaje',false)}});
       $('shareTrip').addEventListener('click',async()=>{const url=location.href;try{if(navigator.share)await navigator.share({title:'Seguimiento de mi viaje Livre',url});else{await navigator.clipboard.writeText(url);$('trackNotice').textContent='Link copiado para compartir.';$('trackNotice').classList.remove('hidden')}}catch(_){}});
       $('passengerMessageForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('passengerMessage'),body=input.value.trim();if(!body||!currentTrackingToken)return;input.disabled=true;try{const response=await sendMessageWithRetry(API+'/mobility/tracking/'+encodeURIComponent(currentTrackingToken)+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body,client_message_id:messageId()})});if(!response.ok)throw Error('No se pudo enviar el mensaje');input.value='';await refreshPassengerMessages(currentTrackingToken)}catch(error){$('chatNotice').textContent=error.message}finally{input.disabled=false}});
 
@@ -953,9 +953,7 @@
           if(!response.ok)throw Error(data.detail||'No se pudo cancelar el viaje');
           renderInlineStatus(data.status);
           clearActiveTrip();
-          $('inlineTrackNotice').textContent='Viaje cancelado.';
-          $('inlineTrackNotice').classList.remove('hidden');
-          $('inlineTrackNotice').style.cssText='';
+          resetTrackingView();
         }catch(error){
           $('inlineTrackNotice').textContent=error.message;
           $('inlineTrackNotice').classList.remove('hidden');
