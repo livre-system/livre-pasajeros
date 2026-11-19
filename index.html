@@ -731,8 +731,8 @@
 
         if(phase==='pickup'){
           // ── Tramo activo: conductor → punto de recogida (teal, destacado) ──
-          const shadow=L.polyline(points,{color:'#055e61',weight:10,opacity:.15}).addTo(trackMap);
-          trackRouteLine=L.polyline(points,{color:'#087f83',weight:5,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+          const shadow=L.polyline(points,{color:'#055e61',weight:8,opacity:.18,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+                    trackRouteLine=L.polyline(points,{color:'#087f83',weight:4,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
           // Marcador de llegada del auto (inicio del tramo = posición del conductor ya se muestra con trackMarker)
           // Marcador de recogida (fin del tramo activo)
           const pickupMarker=L.marker(points[points.length-1],{icon:makeIcon(SVG_ORIGIN,38,38,19,19),title:'Tu ubicación'}).addTo(trackMap);
@@ -755,8 +755,8 @@
 
         }else{
           // ── Fase trip: una sola línea activa roja ──
-          const shadow=L.polyline(points,{color:'#9d1237',weight:10,opacity:.15}).addTo(trackMap);
-          trackRouteLine=L.polyline(points,{color:'#e8003d',weight:5,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+          const shadow=L.polyline(points,{color:'#9d1237',weight:8,opacity:.18,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
+                    trackRouteLine=L.polyline(points,{color:'#e8003d',weight:4,opacity:1,lineJoin:'round',lineCap:'round'}).addTo(trackMap);
           const originMarker=L.marker(points[0],{icon:makeIcon(SVG_ORIGIN,38,38,19,19)}).addTo(trackMap);
           const destMarker=L.marker(points[points.length-1],{icon:makeIcon(SVG_DEST,36,46,18,43)}).addTo(trackMap);
           trackRouteStops=[shadow,originMarker,destMarker];
