@@ -765,7 +765,7 @@
         if(phaseChanged){
           const bounds=trackRouteLine.getBounds();
           if(_ghostLine)bounds.extend(_ghostLine.getBounds());
-          trackMap.fitBounds(bounds,{padding:[48,48],maxZoom:16});
+          trackMap.fitBounds(bounds,{padding:[48,48],maxZoom:14,animate:false});
         }
       }
 
