@@ -773,7 +773,10 @@
 
       function resetTrackingView(message=''){
         trackingPolling?.stop();passengerChatPolling?.stop();
+        trackingPolling=null;passengerChatPolling=null;
         trackMap?.remove();trackMap=null;trackMarker=null;trackRouteLine=null;trackRouteStops=[];trackRoutePhase='';currentTrackingToken='';_prevCarPos=null;_carHeading=0;_ghostLine=null;_ghostStops=[];
+        window._fullRouteRecenterTimer && (clearInterval(window._fullRouteRecenterTimer),window._fullRouteRecenterTimer=null);
+        quoteRequestSequence += 1; routePreviewRequest += 1;
         clearActiveTrip();
         // Ocultar panel inline, mostrar formulario
         $('requestForm').classList.remove('trip-active');
