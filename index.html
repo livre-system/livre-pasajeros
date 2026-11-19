@@ -749,7 +749,7 @@
               if(ghostPts.length>=2){
                 _ghostLine=L.polyline(ghostPts,{color:'#b0bec5',weight:4,opacity:.55,dashArray:'8 6',lineJoin:'round',lineCap:'round'}).addTo(trackMap);
                 const destMarker=L.marker(ghostPts[ghostPts.length-1],{icon:makeIcon(SVG_DEST,36,46,18,43),title:'Tu destino'}).addTo(trackMap);
-                _ghostStops=[destMarker];
+                _ghostStops=[_ghostLine,destMarker];
               }
             }
           }catch(_){}// silencioso, el tramo secundario es solo visual
